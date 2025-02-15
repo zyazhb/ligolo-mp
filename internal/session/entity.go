@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/yamux"
-	"github.com/ttpreport/ligolo-mp/internal/network"
 	"github.com/ttpreport/ligolo-mp/internal/protocol"
+	"github.com/ttpreport/ligolo-mp/internal/tun"
 	"github.com/ttpreport/ligolo-mp/pkg/memstore"
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -24,7 +24,7 @@ type Session struct {
 	IsConnected bool
 	IsRelaying  bool
 	Redirectors *memstore.Syncmap[string, Redirector]
-	Tun         *network.Tun
+	Tun         *tun.Tun
 	Hostname    string
 	Interfaces  *memstore.Syncslice[protocol.NetInterface]
 	Multiplex   *yamux.Session `json:"-"`
@@ -53,7 +53,7 @@ func new() (*Session, error) {
 		Interfaces:  memstore.NewSyncslice[protocol.NetInterface](),
 	}
 
-	tun, err := network.NewTun()
+	tun, err := tun.NewTun()
 	if err != nil {
 		slog.Error("could not create new tun, aborting")
 		return nil, err
@@ -442,5 +442,40 @@ func (sess *Session) Proto() *pb.Session {
 		Interfaces:  ifaces,
 		FirstSeen:   timestamppb.New(sess.GetFirstSeen()),
 		LastSeen:    timestamppb.New(sess.GetLastSeen()),
+	}
+}
+
+func ProtoToSession(p *pb.Session) *Session {
+	redirectors := memstore.NewSyncmap[string, Redirector]()
+	for _, r := range p.Redirectors {
+		redirector := Redirector{
+			ID:       r.ID,
+			Protocol: r.Protocol,
+			From:     r.From,
+			To:       r.To,
+		}
+
+		redirectors.Set(redirector.ID, redirector)
+	}
+
+	ifaces := memstore.NewSyncslice[protocol.NetInterface]()
+	for _, iface := range p.Interfaces {
+		ifaces.Append(protocol.NetInterface{
+			Name:      iface.Name,
+			Addresses: iface.IPs,
+		})
+	}
+
+	return &Session{
+		ID:          p.ID,
+		Alias:       p.Alias,
+		IsConnected: p.IsConnected,
+		IsRelaying:  p.IsRelaying,
+		Redirectors: redirectors,
+		Tun:         tun.ProtoToTun(p.Tun),
+		Hostname:    p.Hostname,
+		Interfaces:  ifaces,
+		FirstSeen:   p.FirstSeen.AsTime(),
+		LastSeen:    p.LastSeen.AsTime(),
 	}
 }

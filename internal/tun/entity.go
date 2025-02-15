@@ -1,10 +1,12 @@
-package network
+package tun
 
 import (
 	"log/slog"
 	"net"
 
 	"github.com/hashicorp/yamux"
+	"github.com/ttpreport/ligolo-mp/internal/netstack"
+	"github.com/ttpreport/ligolo-mp/internal/route"
 	"github.com/ttpreport/ligolo-mp/pkg/memstore"
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
 	"github.com/vishvananda/netlink"
@@ -14,19 +16,14 @@ type Tun struct {
 	ID       int
 	Name     string
 	Active   bool
-	Routes   *memstore.Syncmap[string, *Route]
-	netstack *NetStack `json:"-"`
-}
-
-type Route struct {
-	Cidr       *net.IPNet
-	IsLoopback bool
+	Routes   *memstore.Syncmap[string, *route.Route]
+	netstack *netstack.NetStack `json:"-"`
 }
 
 func NewTun() (*Tun, error) {
 	slog.Debug("creating new tun")
 	ret := &Tun{
-		Routes: memstore.NewSyncmap[string, *Route](),
+		Routes: memstore.NewSyncmap[string, *route.Route](),
 	}
 
 	return ret, nil
@@ -57,7 +54,7 @@ func (t *Tun) Start(multiplex *yamux.Session, maxConnections int, maxInFlight in
 	}
 	slog.Debug("interface set up")
 
-	ns, err := NewNetstack(maxConnections, maxInFlight, t.Name)
+	ns, err := netstack.NewNetstack(maxConnections, maxInFlight, t.Name)
 	if err != nil {
 		slog.Error("could not create netstack")
 		return err
@@ -166,7 +163,7 @@ func (t *Tun) NewRoute(cidr string, isLoopback bool) error {
 		return err
 	}
 
-	t.Routes.Set(dst.String(), &Route{
+	t.Routes.Set(dst.String(), &route.Route{
 		Cidr:       dst,
 		IsLoopback: isLoopback,
 	})
@@ -204,8 +201,8 @@ func (t *Tun) GetName() (string, error) {
 	return link.Attrs().Name, nil
 }
 
-func (t *Tun) GetRoutes() []Route {
-	var result []Route
+func (t *Tun) GetRoutes() []route.Route {
+	var result []route.Route
 	for _, route := range t.Routes.All() {
 		result = append(result, *route)
 	}
@@ -213,8 +210,8 @@ func (t *Tun) GetRoutes() []Route {
 	return result
 }
 
-func (t *Tun) GetLocalRoutes() []Route {
-	var routes []Route
+func (t *Tun) GetLocalRoutes() []route.Route {
+	var routes []route.Route
 	for _, route := range t.Routes.All() {
 		if route.IsLoopback {
 			routes = append(routes, *route)
@@ -227,13 +224,23 @@ func (t *Tun) GetLocalRoutes() []Route {
 func (t *Tun) Proto() *pb.Tun {
 	var Routes []*pb.Route
 	for _, route := range t.Routes.All() {
-		Routes = append(Routes, &pb.Route{
-			Cidr:       route.Cidr.String(),
-			IsLoopback: route.IsLoopback,
-		})
+		Routes = append(Routes, route.Proto())
 	}
+
 	return &pb.Tun{
 		Name:   t.Name,
 		Routes: Routes,
+	}
+}
+
+func ProtoToTun(p *pb.Tun) *Tun {
+	routes := memstore.NewSyncmap[string, *route.Route]()
+	for _, r := range p.Routes {
+		routes.Set(r.Cidr, route.ProtoToRoute(r))
+	}
+
+	return &Tun{
+		Name:   p.Name,
+		Routes: routes,
 	}
 }

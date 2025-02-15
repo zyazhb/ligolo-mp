@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"time"
 
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
 )
@@ -30,16 +31,28 @@ func (cert *Certificate) CertPool() (*x509.CertPool, error) {
 	return certpool, nil
 }
 
-func (cert *Certificate) Proto() *pb.Cert {
+func (cert *Certificate) ExpiryDate() time.Time {
 	keypair, err := cert.KeyPair()
 	if err != nil {
-		return nil
+		return time.Time{}
 	}
 
+	return keypair.Leaf.NotAfter
+}
+
+func (cert *Certificate) Proto() *pb.Cert {
 	return &pb.Cert{
 		Name:        cert.Name,
-		ExpiryDate:  keypair.Leaf.NotAfter.String(),
+		ExpiryDate:  cert.ExpiryDate().String(),
 		Certificate: cert.Certificate,
 		Key:         cert.Key,
+	}
+}
+
+func ProtoToCertificate(p *pb.Cert) *Certificate {
+	return &Certificate{
+		Name:        p.Name,
+		Certificate: p.Certificate,
+		Key:         p.Key,
 	}
 }

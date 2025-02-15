@@ -178,6 +178,7 @@ func (dash *DashboardPage) initSessionsWidget() {
 				dash.DoWithLoader("Adding redirector...", func() {
 					err := dash.sessionAddRedirectorFunc(sess, from, to, proto)
 					if err != nil {
+						dash.RemovePage(redir.GetID())
 						dash.ShowError(fmt.Sprintf("Could not add route: %s", err), cleanup)
 						return
 					}
@@ -191,7 +192,6 @@ func (dash *DashboardPage) initSessionsWidget() {
 				dash.setFocus(dash.sessions)
 				cleanup()
 			})
-
 			dash.AddPage(redir.GetID(), redir, true, true)
 		}))
 

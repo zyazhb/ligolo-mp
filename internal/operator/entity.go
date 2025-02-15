@@ -147,3 +147,12 @@ func (oper *Operator) Proto() *pb.Operator {
 		Server:   oper.Server,
 	}
 }
+
+func ProtoToOperator(p *pb.Operator) *Operator {
+	return &Operator{
+		Name:     p.Name,
+		IsAdmin:  p.IsAdmin,
+		IsOnline: p.IsOnline,
+		Server:   p.Server,
+	}
+}

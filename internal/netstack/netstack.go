@@ -1,4 +1,4 @@
-package network
+package netstack
 
 import (
 	"bytes"
@@ -12,6 +12,7 @@ import (
 	"github.com/ttpreport/ligolo-mp/internal/netstack/tun"
 	"github.com/ttpreport/ligolo-mp/internal/protocol"
 	"github.com/ttpreport/ligolo-mp/internal/relay"
+	"github.com/ttpreport/ligolo-mp/internal/route"
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -126,7 +127,7 @@ func (s *NetStack) GetTunConn() <-chan TunConn {
 	return s.pool.Pool
 }
 
-func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, localRoutes []Route) {
+func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, localRoutes []route.Route) {
 	var endpointID stack.TransportEndpointID
 	var prototransport uint8
 	var protonet uint8
@@ -327,7 +328,7 @@ func (ns *NetStack) icmpResponder() (chan bool, error) {
 
 // handleICMP process incoming ICMP packets and, depending on the target host status, respond a ICMP ECHO Reply
 // Please note that other ICMP messages are not yet supported.
-func (ns *NetStack) handleICMP(localConn TunConn, multiplex *yamux.Session, localRoutes []Route) {
+func (ns *NetStack) handleICMP(localConn TunConn, multiplex *yamux.Session, localRoutes []route.Route) {
 	pkt := localConn.GetICMP().Request
 	v, ok := pkt.Data().PullUp(header.ICMPv4MinimumSize)
 	if !ok {
