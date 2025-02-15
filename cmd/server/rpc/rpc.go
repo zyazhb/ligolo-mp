@@ -532,6 +532,9 @@ func (s *ligoloServer) unaryAuthInterceptor(ctx context.Context, req any, info *
 func Run(config *config.Config, certService *certificate.CertificateService, sessService *session.SessionService, operService *operator.OperatorService, assetsService *assets.AssetsService) error {
 	lis, err := net.Listen("tcp", config.OperatorAddr)
 	if err != nil {
+		slog.Error("Could not start operator server",
+			slog.Any("error", err),
+		)
 		return err
 	}
 

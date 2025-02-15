@@ -1,13 +1,12 @@
 package logger
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"log/slog"
+	"strings"
 	"time"
 )
 
@@ -17,41 +16,34 @@ type LogHandler struct {
 }
 
 func (h *LogHandler) Handle(ctx context.Context, r slog.Record) error {
-	level := r.Level.String() + ":"
+	var logLine strings.Builder
+
+	timeStr := r.Time.Format(time.RFC3339)
+	logLine.WriteString(fmt.Sprintf("[#A9A9A9][%s][-]", timeStr))
+	logLine.WriteString(" ")
 
 	switch r.Level {
 	case slog.LevelDebug:
-		level = fmt.Sprintf("[#FF00FF]%s[-]", level)
+		logLine.WriteString(fmt.Sprintf("[#FF00FF]%s[-]", r.Level))
 	case slog.LevelInfo:
-		level = fmt.Sprintf("[#87CEEB]%s[-]", level)
+		logLine.WriteString(fmt.Sprintf("[#7CFC00]%s[-]", r.Level))
 	case slog.LevelWarn:
-		level = fmt.Sprintf("[#FFFF00]%s[-]", level)
+		logLine.WriteString(fmt.Sprintf("[#FFFF00]%s[-]", r.Level))
 	case slog.LevelError:
-		level = fmt.Sprintf("[#880808]%s[-]", level)
+		logLine.WriteString(fmt.Sprintf("[#880808]%s[-]", r.Level))
 	}
+	logLine.WriteString(" ")
 
-	fields := make(map[string]interface{}, r.NumAttrs())
+	logLine.WriteString(fmt.Sprintf("[#F9F6EE]%s[-]", r.Message))
+	logLine.WriteString(" ")
+
 	r.Attrs(func(a slog.Attr) bool {
-		fields[a.Key] = a.Value.Any()
+		logLine.WriteString(fmt.Sprintf("[#87CEEB]%s[-]=[#C2B280]%s[-]", a.Key, a.Value))
+		logLine.WriteString(" ")
 		return true
 	})
 
-	metadata := bytes.Buffer{}
-	var metadataStr string
-	if len(fields) > 0 {
-		src, err := json.MarshalIndent(fields, "", "  ")
-		if err != nil {
-			return err
-		}
-
-		json.Compact(&metadata, src)
-		metadataStr = fmt.Sprintf("| [#F9F6EE]%s[-]", metadata.String())
-	}
-
-	timeStr := r.Time.Format(time.RFC3339)
-	msg := fmt.Sprintf("[#008B8B]%s[-]", r.Message)
-
-	h.l.Println(timeStr, level, msg, metadataStr)
+	h.l.Println(logLine.String())
 
 	return nil
 }

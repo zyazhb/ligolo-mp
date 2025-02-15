@@ -136,7 +136,7 @@ func (aah *AgentApiHandler) startHandler() {
 
 		slog.Debug("session initialized")
 
-		events.Publish(events.OK, "new session with '%s' established", newSession.Hostname)
+		events.Publish(events.OK, "new session with '%s' established", newSession.GetName())
 	}
 
 }
@@ -146,7 +146,7 @@ func (aah *AgentApiHandler) startSessionMonitor(sess *session.Session) {
 
 	slog.Debug("session multiplexer closed", slog.Any("session", sess))
 	aah.sessionService.DisconnectSession(sess.ID)
-	events.Publish(events.ERROR, "session with '%s' disconnected", sess.Hostname)
+	events.Publish(events.ERROR, "session with '%s' disconnected", sess.GetName())
 }
 
 func (aah *AgentApiHandler) Close() {

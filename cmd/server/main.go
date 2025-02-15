@@ -139,6 +139,4 @@ func main() {
 	} else {
 		app.Run()
 	}
-
-	slog.Info("Ligolo-mp instance terminated")
 }
