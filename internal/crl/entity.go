@@ -14,3 +14,7 @@ type RevokedCertificate struct {
 func (rc *RevokedCertificate) Hash() string {
 	return fmt.Sprintf("%x", rc.Thumbprint)
 }
+
+func (rc *RevokedCertificate) String() string {
+	return fmt.Sprintf("Reason=%s", rc.Reason)
+}

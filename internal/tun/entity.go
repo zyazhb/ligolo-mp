@@ -1,6 +1,7 @@
 package tun
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 
@@ -215,6 +216,10 @@ func (t *Tun) GetLocalRoutes() []route.Route {
 	}
 
 	return routes
+}
+
+func (t *Tun) String() string {
+	return fmt.Sprintf("ID=%d Name=%s with %d routes", t.ID, t.Name, len(t.Routes.All()))
 }
 
 func (t *Tun) Proto() *pb.Tun {

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
 	"github.com/ttpreport/ligolo-mp/internal/certificate"
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
 	"google.golang.org/grpc"
@@ -137,6 +138,10 @@ func (oper *Operator) IsConnected() bool {
 
 func (oper *Operator) Client() pb.LigoloClient {
 	return oper.client
+}
+
+func (oper *Operator) String() string {
+	return fmt.Sprintf("Name=%s IsAdmin=%s", oper.Name, utils.HumanBool(oper.IsAdmin))
 }
 
 func (oper *Operator) Proto() *pb.Operator {

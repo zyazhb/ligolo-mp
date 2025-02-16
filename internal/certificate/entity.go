@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"time"
 
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
@@ -38,6 +39,10 @@ func (cert *Certificate) ExpiryDate() time.Time {
 	}
 
 	return keypair.Leaf.NotAfter
+}
+
+func (cert *Certificate) String() string {
+	return fmt.Sprintf("Name=%s CA=%s", cert.Name, cert.caName)
 }
 
 func (cert *Certificate) Proto() *pb.Cert {

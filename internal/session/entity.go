@@ -412,6 +412,10 @@ func (sess *Session) Hash() string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+func (sess *Session) String() string {
+	return fmt.Sprintf("ID=%s Alias=%s Hostname=%s", sess.ID, sess.Alias, sess.Hostname)
+}
+
 func (sess *Session) Proto() *pb.Session {
 	var ifaces []*pb.Interface
 	for _, ifaceInfo := range sess.Interfaces.All() {
