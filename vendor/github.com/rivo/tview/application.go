@@ -250,13 +250,7 @@ func (a *Application) EnablePaste(enable bool) *Application {
 }
 
 // Run starts the application and thus the event loop. This function returns
-// when [Application.Stop] was called.
-//
-// Note that while an application is running, it fully claims stdin, stdout, and
-// stderr. If you use these standard streams, they may not work as expected.
-// Consider stopping the application first or suspending it (using
-// [Application.Suspend]) if you have to interact with the standard streams, for
-// example when needing to print a call stack during a panic.
+// when Stop() was called.
 func (a *Application) Run() error {
 	var (
 		err, appErr error

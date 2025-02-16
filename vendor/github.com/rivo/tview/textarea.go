@@ -1,7 +1,6 @@
 package tview
 
 import (
-	"math"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -93,6 +92,9 @@ type textAreaUndoItem struct {
 // TextArea implements a simple text editor for multi-line text. Multi-color
 // text is not supported. Word-wrapping is enabled by default but can be turned
 // off or be changed to character-wrapping.
+//
+// At this point, a text area cannot be added to a [Form]. This will be added in
+// the future.
 //
 // # Navigation and Editing
 //
@@ -361,8 +363,6 @@ func NewTextArea() *TextArea {
 		lastAction:       taActionOther,
 		minCursorPrefix:  minCursorPrefixDefault,
 		minCursorSuffix:  minCursorSuffixDefault,
-		lastWidth:        math.MaxInt / 2, // We need this so some functions work before the first draw.
-		lastHeight:       1,
 	}
 	t.editText.Grow(editBufferMinCap)
 	t.spans[0] = textAreaSpan{previous: -1, next: 1}

@@ -84,8 +84,11 @@ type Form struct {
 	// The label color.
 	labelColor tcell.Color
 
-	// The style of the input area.
-	fieldStyle tcell.Style
+	// The background color of the input area.
+	fieldBackgroundColor tcell.Color
+
+	// The text color of the input area.
+	fieldTextColor tcell.Color
 
 	// The style of the buttons when they are not focused.
 	buttonStyle tcell.Style
@@ -112,7 +115,8 @@ func NewForm() *Form {
 		Box:                  box,
 		itemPadding:          1,
 		labelColor:           Styles.SecondaryTextColor,
-		fieldStyle:           tcell.StyleDefault.Background(Styles.ContrastBackgroundColor).Foreground(Styles.PrimaryTextColor),
+		fieldBackgroundColor: Styles.ContrastBackgroundColor,
+		fieldTextColor:       Styles.PrimaryTextColor,
 		buttonStyle:          tcell.StyleDefault.Background(Styles.ContrastBackgroundColor).Foreground(Styles.PrimaryTextColor),
 		buttonActivatedStyle: tcell.StyleDefault.Background(Styles.PrimaryTextColor).Foreground(Styles.ContrastBackgroundColor),
 		buttonDisabledStyle:  tcell.StyleDefault.Background(Styles.ContrastBackgroundColor).Foreground(Styles.ContrastSecondaryTextColor),
@@ -147,20 +151,13 @@ func (f *Form) SetLabelColor(color tcell.Color) *Form {
 
 // SetFieldBackgroundColor sets the background color of the input areas.
 func (f *Form) SetFieldBackgroundColor(color tcell.Color) *Form {
-	f.fieldStyle = f.fieldStyle.Background(color)
+	f.fieldBackgroundColor = color
 	return f
 }
 
 // SetFieldTextColor sets the text color of the input areas.
 func (f *Form) SetFieldTextColor(color tcell.Color) *Form {
-	f.fieldStyle = f.fieldStyle.Foreground(color)
-	return f
-}
-
-// SetFieldStyle sets the style of the input areas. Attributes are currently
-// still ignored to maintain backwards compatibility.
-func (f *Form) SetFieldStyle(style tcell.Style) *Form {
-	f.fieldStyle = style
+	f.fieldTextColor = color
 	return f
 }
 
@@ -573,13 +570,12 @@ func (f *Form) Draw(screen tcell.Screen) {
 		if x+itemWidth >= rightLimit {
 			itemWidth = rightLimit - x
 		}
-		fieldTextColor, fieldBackgroundColor, _ := f.fieldStyle.Decompose()
 		item.SetFormAttributes(
 			labelWidth,
 			f.labelColor,
 			f.backgroundColor,
-			fieldTextColor,
-			fieldBackgroundColor,
+			f.fieldTextColor,
+			f.fieldBackgroundColor,
 		)
 
 		// Save position.

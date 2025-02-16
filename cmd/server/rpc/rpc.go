@@ -82,7 +82,7 @@ func (s *ligoloServer) Join(in *pb.Empty, stream pb.Ligolo_JoinServer) error {
 	s.connections = slices.Delete(s.connections, operNum-1, operNum)
 	s.connMutex.Unlock()
 
-	events.Publish(events.ERROR, "%s has left the game", oper.Name)
+	events.Publish(events.OK, "%s has left the game", oper.Name)
 
 	return nil
 }

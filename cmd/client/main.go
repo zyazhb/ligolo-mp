@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui"
 	"github.com/ttpreport/ligolo-mp/internal/certificate"
@@ -10,12 +12,30 @@ import (
 	"github.com/ttpreport/ligolo-mp/internal/crl"
 	"github.com/ttpreport/ligolo-mp/internal/operator"
 	"github.com/ttpreport/ligolo-mp/internal/storage"
+	"github.com/ttpreport/ligolo-mp/pkg/logger"
 )
 
 func main() {
-	var credsFile = flag.String("import", "", "Path to credentials file to import")
+	var verbose = flag.Bool("v", false, "enable verbose mode")
 
 	flag.Parse()
+
+	loggingOpts := &slog.HandlerOptions{}
+	if *verbose {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelDebug)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	} else {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelInfo)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	}
+	logHandler := slog.New(slog.NewTextHandler(os.Stdout, loggingOpts))
+	slog.SetDefault(logHandler)
 
 	cfg := &config.Config{
 		Environment: "client",
@@ -45,15 +65,8 @@ func main() {
 	certService := certificate.NewCertificateService(certRepo, crlService)
 	operService := operator.NewOperatorService(cfg, operRepo, certService)
 
-	if *credsFile == "" {
-		app := tui.NewApp(operService)
-		app.Run()
-	} else {
-		_, err := operService.NewOperatorFromFile(*credsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println("Credentials successfully imported!")
-	}
+	app := tui.NewApp(operService)
+	logHandler = slog.New(logger.NewLogHandler(app.Logs, loggingOpts))
+	slog.SetDefault(logHandler)
+	app.Run()
 }

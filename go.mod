@@ -12,7 +12,7 @@ require (
 
 require (
 	github.com/gdamore/tcell/v2 v2.8.1
-	github.com/rivo/tview v0.0.0-20241227133733-17b7edb88c57
+	github.com/rivo/tview v0.0.0-20240807205129-e4c497cc59ed
 	github.com/rs/xid v1.6.0
 	github.com/vishvananda/netlink v1.3.0
 	golang.org/x/sys v0.30.0

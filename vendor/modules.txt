@@ -71,7 +71,7 @@ github.com/ncruces/go-strftime
 # github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
 ## explicit; go 1.12
 github.com/remyoudompheng/bigfft
-# github.com/rivo/tview v0.0.0-20241227133733-17b7edb88c57
+# github.com/rivo/tview v0.0.0-20240807205129-e4c497cc59ed
 ## explicit; go 1.18
 github.com/rivo/tview
 # github.com/rivo/uniseg v0.4.7
