@@ -7,13 +7,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 )
 
 type RedirectorsWidget struct {
 	tview.Table
 	data            []*RedirectorsWidgetElem
-	selectedSession *pb.Session
+	selectedSession *session.Session
 	selectedFunc    func(string)
 }
 
@@ -53,12 +53,12 @@ func (widget *RedirectorsWidget) InputHandler() func(event *tcell.EventKey, setF
 
 }
 
-func (widget *RedirectorsWidget) SetData(data []*pb.Session) {
+func (widget *RedirectorsWidget) SetData(data []*session.Session) {
 	widget.Clear()
 
 	widget.data = nil
 	for _, session := range data {
-		for _, redirector := range session.Redirectors {
+		for _, redirector := range session.Redirectors.All() {
 			widget.data = append(widget.data, NewRedirectorsWidgetElem(redirector, session))
 		}
 	}
@@ -67,7 +67,7 @@ func (widget *RedirectorsWidget) SetData(data []*pb.Session) {
 	widget.ResetSelector()
 }
 
-func (widget *RedirectorsWidget) SetSelectedSession(sess *pb.Session) {
+func (widget *RedirectorsWidget) SetSelectedSession(sess *session.Session) {
 	widget.selectedSession = sess
 	widget.Refresh()
 }
@@ -81,7 +81,7 @@ func (widget *RedirectorsWidget) FetchElem(row int) *RedirectorsWidgetElem {
 	return nil
 }
 
-func (widget *RedirectorsWidget) FetchRow(sess *pb.Session) int {
+func (widget *RedirectorsWidget) FetchRow(sess *session.Session) int {
 	for row, elem := range widget.data {
 		if elem.Session.ID == sess.ID {
 			return row + 1
@@ -149,12 +149,12 @@ func (widget *RedirectorsWidget) Refresh() {
 }
 
 type RedirectorsWidgetElem struct {
-	Redirector *pb.Redirector
-	Session    *pb.Session
+	Redirector session.Redirector
+	Session    *session.Session
 	bgcolor    tcell.Color
 }
 
-func NewRedirectorsWidgetElem(redirector *pb.Redirector, session *pb.Session) *RedirectorsWidgetElem {
+func NewRedirectorsWidgetElem(redirector session.Redirector, session *session.Session) *RedirectorsWidgetElem {
 	return &RedirectorsWidgetElem{
 		Redirector: redirector,
 		Session:    session,
@@ -163,15 +163,11 @@ func NewRedirectorsWidgetElem(redirector *pb.Redirector, session *pb.Session) *R
 }
 
 func (elem *RedirectorsWidgetElem) Name() *tview.TableCell {
-	val := elem.Session.Hostname
-	if elem.Session.Alias != "" {
-		val = elem.Session.Alias
-	}
-
+	val := elem.Session.GetName()
 	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
 }
 
-func (elem *RedirectorsWidgetElem) IsSelected(sess *pb.Session) bool {
+func (elem *RedirectorsWidgetElem) IsSelected(sess *session.Session) bool {
 	if sess == nil {
 		return false
 	}

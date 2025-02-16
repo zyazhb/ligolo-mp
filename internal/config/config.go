@@ -58,3 +58,10 @@ func (cfg *Config) Proto() *pb.Config {
 		AgentServer:    cfg.ListenInterface,
 	}
 }
+
+func ProtoToConfig(p *pb.Config) *Config {
+	return &Config{
+		OperatorAddr:    p.OperatorServer,
+		ListenInterface: p.AgentServer,
+	}
+}

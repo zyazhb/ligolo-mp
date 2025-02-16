@@ -8,14 +8,14 @@ import (
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 )
 
 type SessionsWidget struct {
 	tview.Table
 	data            []*SessionsWidgetElem
-	selectedFunc    func(*pb.Session)
-	selectedSession *pb.Session
+	selectedFunc    func(*session.Session)
+	selectedSession *session.Session
 }
 
 func NewSessionsWidget() *SessionsWidget {
@@ -42,7 +42,7 @@ func NewSessionsWidget() *SessionsWidget {
 	return widget
 }
 
-func (widget *SessionsWidget) SetSelectedSession(sess *pb.Session) {
+func (widget *SessionsWidget) SetSelectedSession(sess *session.Session) {
 	widget.selectedSession = sess
 	widget.Refresh()
 }
@@ -56,7 +56,7 @@ func (widget *SessionsWidget) FetchSession(row int) *SessionsWidgetElem {
 	return nil
 }
 
-func (widget *SessionsWidget) FetchRow(sess *pb.Session) int {
+func (widget *SessionsWidget) FetchRow(sess *session.Session) int {
 	for row, elem := range widget.data {
 		if elem.Session.ID == sess.ID {
 			return row + 1
@@ -66,7 +66,7 @@ func (widget *SessionsWidget) FetchRow(sess *pb.Session) int {
 	return 0
 }
 
-func (widget *SessionsWidget) SetSelectionChangedFunc(f func(*pb.Session)) {
+func (widget *SessionsWidget) SetSelectionChangedFunc(f func(*session.Session)) {
 	widget.Table.SetSelectionChangedFunc(func(row, _ int) {
 		item := widget.FetchSession(row)
 		if item != nil {
@@ -75,7 +75,7 @@ func (widget *SessionsWidget) SetSelectionChangedFunc(f func(*pb.Session)) {
 	})
 }
 
-func (widget *SessionsWidget) SetSelectedFunc(f func(*pb.Session)) {
+func (widget *SessionsWidget) SetSelectedFunc(f func(*session.Session)) {
 	widget.Table.SetSelectedFunc(func(row, _ int) {
 		item := widget.FetchSession(row)
 		if item != nil {
@@ -84,7 +84,7 @@ func (widget *SessionsWidget) SetSelectedFunc(f func(*pb.Session)) {
 	})
 }
 
-func (widget *SessionsWidget) SetData(data []*pb.Session) {
+func (widget *SessionsWidget) SetData(data []*session.Session) {
 	widget.Clear()
 
 	widget.data = nil
@@ -137,18 +137,18 @@ func (widget *SessionsWidget) Refresh() {
 }
 
 type SessionsWidgetElem struct {
-	Session *pb.Session
+	Session *session.Session
 	bgcolor tcell.Color
 }
 
-func NewSessionsWidgetElem(session *pb.Session) *SessionsWidgetElem {
+func NewSessionsWidgetElem(session *session.Session) *SessionsWidgetElem {
 	return &SessionsWidgetElem{
 		Session: session,
 		bgcolor: style.BgColor,
 	}
 }
 
-func (elem *SessionsWidgetElem) IsSelected(sess *pb.Session) bool {
+func (elem *SessionsWidgetElem) IsSelected(sess *session.Session) bool {
 	if sess == nil {
 		return false
 	}
@@ -189,12 +189,12 @@ func (elem *SessionsWidgetElem) IsRelaying() *tview.TableCell {
 }
 
 func (elem *SessionsWidgetElem) FirstSeen() *tview.TableCell {
-	val := utils.HumanTime(elem.Session.FirstSeen.AsTime())
+	val := utils.HumanTime(elem.Session.FirstSeen)
 	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
 }
 
 func (elem *SessionsWidgetElem) LastSeen() *tview.TableCell {
-	val := utils.HumanTimeSince(elem.Session.LastSeen.AsTime())
+	val := utils.HumanTimeSince(elem.Session.LastSeen)
 	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
 }
 

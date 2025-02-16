@@ -145,6 +145,8 @@ func (oper *Operator) Proto() *pb.Operator {
 		IsAdmin:  oper.IsAdmin,
 		IsOnline: oper.IsOnline,
 		Server:   oper.Server,
+		Cert:     oper.Cert.Proto(),
+		CA:       oper.CA,
 	}
 }
 
@@ -154,5 +156,7 @@ func ProtoToOperator(p *pb.Operator) *Operator {
 		IsAdmin:  p.IsAdmin,
 		IsOnline: p.IsOnline,
 		Server:   p.Server,
+		Cert:     certificate.ProtoToCertificate(p.Cert),
+		CA:       p.CA,
 	}
 }

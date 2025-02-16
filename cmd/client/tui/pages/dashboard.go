@@ -8,8 +8,9 @@ import (
 	forms "github.com/ttpreport/ligolo-mp/cmd/client/tui/forms"
 	modals "github.com/ttpreport/ligolo-mp/cmd/client/tui/modals"
 	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/internal/config"
 	"github.com/ttpreport/ligolo-mp/internal/operator"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 )
 
 type DashboardPage struct {
@@ -23,21 +24,21 @@ type DashboardPage struct {
 	routes      *widgets.RoutesWidget
 	redirectors *widgets.RedirectorsWidget
 
-	getData                     func() ([]*pb.Session, error)
-	getMetadata                 func() (*pb.GetMetadataResp, error)
+	getData                     func() ([]*session.Session, error)
+	getMetadata                 func() (*config.Config, *operator.Operator, error)
 	adminFunc                   func()
 	generateFunc                func(path string, servers string, goos string, goarch string, obfuscate bool, proxy string, ignoreEnvProxy bool) (string, error)
-	sessionStartFunc            func(*pb.Session) error
-	sessionStopFunc             func(*pb.Session) error
-	sessionRenameFunc           func(*pb.Session, string) error
-	sessionAddRouteFunc         func(*pb.Session, string, bool) error
-	sessionRemoveRouteFunc      func(*pb.Session, string) error
-	sessionAddRedirectorFunc    func(*pb.Session, string, string, string) error
-	sessionRemoveRedirectorFunc func(*pb.Session, string) error
-	sessionRemoveFunc           func(*pb.Session) error
+	sessionStartFunc            func(*session.Session) error
+	sessionStopFunc             func(*session.Session) error
+	sessionRenameFunc           func(*session.Session, string) error
+	sessionAddRouteFunc         func(*session.Session, string, bool) error
+	sessionRemoveRouteFunc      func(*session.Session, string) error
+	sessionAddRedirectorFunc    func(*session.Session, string, string, string) error
+	sessionRemoveRedirectorFunc func(*session.Session, string) error
+	sessionRemoveFunc           func(*session.Session) error
 
 	operator          *operator.Operator
-	selectedSelection *pb.Session
+	selectedSelection *session.Session
 }
 
 func NewDashboardPage() *DashboardPage {
@@ -84,18 +85,15 @@ func (dash *DashboardPage) Reset() {
 }
 
 func (dash *DashboardPage) initSessionsWidget() {
-	dash.sessions.SetSelectionChangedFunc(func(sess *pb.Session) {
+	dash.sessions.SetSelectionChangedFunc(func(sess *session.Session) {
 		dash.sessions.SetSelectedSession(sess)
 		dash.interfaces.SetSelectedSession(sess)
 		dash.routes.SetSelectedSession(sess)
 		dash.redirectors.SetSelectedSession(sess)
 	})
 
-	dash.sessions.SetSelectedFunc(func(sess *pb.Session) {
-		name := sess.Hostname
-		if sess.Alias != "" {
-			name = sess.Alias
-		}
+	dash.sessions.SetSelectedFunc(func(sess *session.Session) {
+		name := sess.GetName()
 		menu := modals.NewMenuModal(fmt.Sprintf("Session — %s", name))
 		cleanup := func() {
 			dash.RemovePage(menu.GetID())
@@ -232,7 +230,7 @@ func (dash *DashboardPage) initRoutesWidget() {
 
 		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
 			dash.DoWithLoader("Removing route...", func() {
-				err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.Cidr)
+				err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.Cidr.String())
 				if err != nil {
 					dash.ShowError(fmt.Sprintf("Could not remove route: %s", err), cleanup)
 					return
@@ -360,11 +358,11 @@ func (dash *DashboardPage) SetAdminFunc(f func()) {
 	dash.adminFunc = f
 }
 
-func (dash *DashboardPage) SetDataFunc(f func() ([]*pb.Session, error)) {
+func (dash *DashboardPage) SetDataFunc(f func() ([]*session.Session, error)) {
 	dash.getData = f
 }
 
-func (dash *DashboardPage) SetMetadataFunc(f func() (*pb.GetMetadataResp, error)) {
+func (dash *DashboardPage) SetMetadataFunc(f func() (*config.Config, *operator.Operator, error)) {
 	dash.getMetadata = f
 }
 
@@ -372,35 +370,35 @@ func (dash *DashboardPage) SetGenerateFunc(f func(string, string, string, string
 	dash.generateFunc = f
 }
 
-func (dash *DashboardPage) SetSessionStartFunc(f func(*pb.Session) error) {
+func (dash *DashboardPage) SetSessionStartFunc(f func(*session.Session) error) {
 	dash.sessionStartFunc = f
 }
 
-func (dash *DashboardPage) SetSessionStopFunc(f func(*pb.Session) error) {
+func (dash *DashboardPage) SetSessionStopFunc(f func(*session.Session) error) {
 	dash.sessionStopFunc = f
 }
 
-func (dash *DashboardPage) SetSessionRenameFunc(f func(*pb.Session, string) error) {
+func (dash *DashboardPage) SetSessionRenameFunc(f func(*session.Session, string) error) {
 	dash.sessionRenameFunc = f
 }
 
-func (dash *DashboardPage) SetSessionAddRouteFunc(f func(*pb.Session, string, bool) error) {
+func (dash *DashboardPage) SetSessionAddRouteFunc(f func(*session.Session, string, bool) error) {
 	dash.sessionAddRouteFunc = f
 }
 
-func (dash *DashboardPage) SetSessionRemoveRouteFunc(f func(*pb.Session, string) error) {
+func (dash *DashboardPage) SetSessionRemoveRouteFunc(f func(*session.Session, string) error) {
 	dash.sessionRemoveRouteFunc = f
 }
 
-func (dash *DashboardPage) SetSessionAddRedirectorFunc(f func(*pb.Session, string, string, string) error) {
+func (dash *DashboardPage) SetSessionAddRedirectorFunc(f func(*session.Session, string, string, string) error) {
 	dash.sessionAddRedirectorFunc = f
 }
 
-func (dash *DashboardPage) SetSessionRemoveRedirectorFunc(f func(*pb.Session, string) error) {
+func (dash *DashboardPage) SetSessionRemoveRedirectorFunc(f func(*session.Session, string) error) {
 	dash.sessionRemoveRedirectorFunc = f
 }
 
-func (dash *DashboardPage) SetSessionKillFunc(f func(*pb.Session) error) {
+func (dash *DashboardPage) SetSessionKillFunc(f func(*session.Session) error) {
 	dash.sessionRemoveFunc = f
 }
 
@@ -416,13 +414,13 @@ func (dash *DashboardPage) RefreshData() {
 	dash.routes.SetData(data)
 	dash.redirectors.SetData(data)
 
-	metadata, err := dash.getMetadata()
+	config, operator, err := dash.getMetadata()
 	if err != nil {
 		dash.ShowError(fmt.Sprintf("Could not fetch metadata: %s", err), nil)
 		return
 	}
 
-	dash.server.SetData(metadata)
+	dash.server.SetData(config, operator)
 }
 
 func (dash *DashboardPage) GetNavBar() []widgets.NavBarElem {

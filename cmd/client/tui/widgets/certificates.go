@@ -6,7 +6,7 @@ import (
 
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/certificate"
 )
 
 type CertificatesWidget struct {
@@ -37,7 +37,7 @@ func NewCertificatesWidget() *CertificatesWidget {
 	return widget
 }
 
-func (widget *CertificatesWidget) SetData(data []*pb.Cert) {
+func (widget *CertificatesWidget) SetData(data []*certificate.Certificate) {
 	widget.Clear()
 
 	widget.data = nil
@@ -90,10 +90,10 @@ func (widget *CertificatesWidget) SetSelectedFunc(f func(*CertificatesWidgetElem
 }
 
 type CertificatesWidgetElem struct {
-	Certificate *pb.Cert
+	Certificate *certificate.Certificate
 }
 
-func NewCertsWidgetElem(cert *pb.Cert) *CertificatesWidgetElem {
+func NewCertsWidgetElem(cert *certificate.Certificate) *CertificatesWidgetElem {
 	return &CertificatesWidgetElem{
 		Certificate: cert,
 	}
@@ -104,5 +104,5 @@ func (elem *CertificatesWidgetElem) Name() *tview.TableCell {
 }
 
 func (elem *CertificatesWidgetElem) ExpiryDate() *tview.TableCell {
-	return tview.NewTableCell(elem.Certificate.ExpiryDate)
+	return tview.NewTableCell(elem.Certificate.ExpiryDate().String())
 }

@@ -97,11 +97,8 @@ message Operator {
   bool IsAdmin = 2;
   string Server = 3;
   bool IsOnline = 4;
-}
-
-message OperatorCredentials {
-  Cert Cert = 1;
-  bytes CA = 2;
+  Cert Cert = 5;
+  bytes CA = 6;
 }
 
 message Config {
@@ -201,7 +198,6 @@ message AddOperatorReq {
 
 message AddOperatorResp {
   Operator Operator = 1;
-  OperatorCredentials Credentials = 2;
 }
 
 message DelOperatorReq {

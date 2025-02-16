@@ -8,13 +8,14 @@ import (
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/route"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 )
 
 type RoutesWidget struct {
 	tview.Table
 	data            []*RoutesWidgetElem
-	selectedSession *pb.Session
+	selectedSession *session.Session
 	selectedFunc    func(string)
 }
 
@@ -42,7 +43,7 @@ func NewRoutesWidget() *RoutesWidget {
 	return widget
 }
 
-func (widget *RoutesWidget) SetSelectedSession(sess *pb.Session) {
+func (widget *RoutesWidget) SetSelectedSession(sess *session.Session) {
 	widget.selectedSession = sess
 	widget.Refresh()
 }
@@ -56,7 +57,7 @@ func (widget *RoutesWidget) FetchElem(row int) *RoutesWidgetElem {
 	return nil
 }
 
-func (widget *RoutesWidget) FetchRow(sess *pb.Session) int {
+func (widget *RoutesWidget) FetchRow(sess *session.Session) int {
 	for row, elem := range widget.data {
 		if elem.Session.ID == sess.ID {
 			return row + 1
@@ -84,13 +85,13 @@ func (widget *RoutesWidget) SetSelectedFunc(f func(*RoutesWidgetElem)) {
 	})
 }
 
-func (widget *RoutesWidget) SetData(data []*pb.Session) {
+func (widget *RoutesWidget) SetData(data []*session.Session) {
 	widget.Clear()
 
 	widget.data = nil
 
 	for _, session := range data {
-		for _, route := range session.Tun.Routes {
+		for _, route := range session.Tun.Routes.All() {
 			widget.data = append(widget.data, NewRoutesWidgetElem(route, session))
 		}
 	}
@@ -138,12 +139,12 @@ func (widget *RoutesWidget) Refresh() {
 }
 
 type RoutesWidgetElem struct {
-	Route   *pb.Route
-	Session *pb.Session
+	Route   *route.Route
+	Session *session.Session
 	bgcolor tcell.Color
 }
 
-func NewRoutesWidgetElem(route *pb.Route, session *pb.Session) *RoutesWidgetElem {
+func NewRoutesWidgetElem(route *route.Route, session *session.Session) *RoutesWidgetElem {
 	return &RoutesWidgetElem{
 		Route:   route,
 		Session: session,
@@ -151,7 +152,7 @@ func NewRoutesWidgetElem(route *pb.Route, session *pb.Session) *RoutesWidgetElem
 	}
 }
 
-func (elem *RoutesWidgetElem) IsSelected(sess *pb.Session) bool {
+func (elem *RoutesWidgetElem) IsSelected(sess *session.Session) bool {
 	if sess == nil {
 		return false
 	}
@@ -172,11 +173,7 @@ func (elem *RoutesWidgetElem) Highlight(h bool) {
 }
 
 func (elem *RoutesWidgetElem) Name() *tview.TableCell {
-	val := elem.Session.Hostname
-	if elem.Session.Alias != "" {
-		val = elem.Session.Alias
-	}
-
+	val := elem.Session.GetName()
 	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
 }
 
@@ -187,7 +184,7 @@ func (elem *RoutesWidgetElem) IsLoopback() *tview.TableCell {
 
 func (elem *RoutesWidgetElem) Cidr() *tview.TableCell {
 	val := elem.Route.Cidr
-	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
+	return tview.NewTableCell(val.String()).SetBackgroundColor(elem.bgcolor)
 }
 
 func (elem *RoutesWidgetElem) Status() *tview.TableCell {

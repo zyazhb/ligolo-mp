@@ -14,8 +14,11 @@ import (
 	pages "github.com/ttpreport/ligolo-mp/cmd/client/tui/pages"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
 	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/internal/config"
 	"github.com/ttpreport/ligolo-mp/internal/events"
 	"github.com/ttpreport/ligolo-mp/internal/operator"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
 )
 
@@ -160,7 +163,7 @@ func (app *App) initDashboard() {
 		app.SwitchToPage(app.admin)
 	})
 
-	app.dashboard.SetDataFunc(func() ([]*pb.Session, error) {
+	app.dashboard.SetDataFunc(func() ([]*session.Session, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
@@ -169,22 +172,26 @@ func (app *App) initDashboard() {
 			return nil, err
 		}
 
-		return r.Sessions, nil
+		var sessions []*session.Session
+		for _, sess := range r.Sessions {
+			sessions = append(sessions, session.ProtoToSession(sess))
+		}
+
+		return sessions, nil
 	})
 
 	app.dashboard.SetGenerateFunc(func(path string, servers string, goos string, goarch string, obfuscate bool, proxy string, ignoreEnvProxy bool) (string, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*300)
 		defer cancel()
 
-		req := &pb.GenerateAgentReq{
+		r, err := app.operator.Client().GenerateAgent(ctx, &pb.GenerateAgentReq{
 			Servers:        servers,
 			GOOS:           goos,
 			GOARCH:         goarch,
 			Obfuscate:      obfuscate,
 			ProxyServer:    proxy,
 			IgnoreEnvProxy: ignoreEnvProxy,
-		}
-		r, err := app.operator.Client().GenerateAgent(ctx, req)
+		})
 		if err != nil {
 			return "", err
 		}
@@ -201,7 +208,7 @@ func (app *App) initDashboard() {
 		return filepath.Abs(path)
 	})
 
-	app.dashboard.SetSessionStartFunc(func(sess *pb.Session) error {
+	app.dashboard.SetSessionStartFunc(func(sess *session.Session) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().StartRelay(ctx, &pb.StartRelayReq{
@@ -210,7 +217,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionStopFunc(func(sess *pb.Session) error {
+	app.dashboard.SetSessionStopFunc(func(sess *session.Session) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().StopRelay(ctx, &pb.StopRelayReq{
@@ -219,7 +226,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionRenameFunc(func(sess *pb.Session, alias string) error {
+	app.dashboard.SetSessionRenameFunc(func(sess *session.Session, alias string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().RenameSession(ctx, &pb.RenameSessionReq{
@@ -229,9 +236,10 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionAddRouteFunc(func(sess *pb.Session, cidr string, loopback bool) error {
+	app.dashboard.SetSessionAddRouteFunc(func(sess *session.Session, cidr string, loopback bool) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
+
 		_, err := app.operator.Client().AddRoute(ctx, &pb.AddRouteReq{
 			SessionID: sess.ID,
 			Route: &pb.Route{
@@ -242,7 +250,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionRemoveRouteFunc(func(sess *pb.Session, cidr string) error {
+	app.dashboard.SetSessionRemoveRouteFunc(func(sess *session.Session, cidr string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().DelRoute(ctx, &pb.DelRouteReq{
@@ -252,7 +260,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionAddRedirectorFunc(func(sess *pb.Session, from string, to string, proto string) error {
+	app.dashboard.SetSessionAddRedirectorFunc(func(sess *session.Session, from string, to string, proto string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().AddRedirector(ctx, &pb.AddRedirectorReq{
@@ -264,7 +272,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionRemoveRedirectorFunc(func(sess *pb.Session, redirectorID string) error {
+	app.dashboard.SetSessionRemoveRedirectorFunc(func(sess *session.Session, redirectorID string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().DelRedirector(ctx, &pb.DelRedirectorReq{
@@ -274,7 +282,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionKillFunc(func(sess *pb.Session) error {
+	app.dashboard.SetSessionKillFunc(func(sess *session.Session) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().KillSession(ctx, &pb.KillSessionReq{
@@ -283,16 +291,19 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetMetadataFunc(func() (*pb.GetMetadataResp, error) {
+	app.dashboard.SetMetadataFunc(func() (*config.Config, *operator.Operator, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
 		r, err := app.operator.Client().GetMetadata(ctx, &pb.Empty{})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return r, nil
+		config := config.ProtoToConfig(r.Config)
+		operator := operator.ProtoToOperator(r.Operator)
+
+		return config, operator, nil
 	})
 }
 
@@ -301,7 +312,7 @@ func (app *App) initAdmin() {
 		app.SwitchToPage(app.dashboard)
 	})
 
-	app.admin.SetOperatorsFunc(func() ([]*pb.Operator, error) {
+	app.admin.SetOperatorsFunc(func() ([]*operator.Operator, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
@@ -310,10 +321,15 @@ func (app *App) initAdmin() {
 			return nil, err
 		}
 
-		return r.Operators, nil
+		var opers []*operator.Operator
+		for _, oper := range r.Operators {
+			opers = append(opers, operator.ProtoToOperator(oper))
+		}
+
+		return opers, nil
 	})
 
-	app.admin.SetCertificatesFunc(func() ([]*pb.Cert, error) {
+	app.admin.SetCertificatesFunc(func() ([]*certificate.Certificate, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
@@ -322,7 +338,12 @@ func (app *App) initAdmin() {
 			return nil, err
 		}
 
-		return r.Certs, nil
+		var certs []*certificate.Certificate
+		for _, cert := range r.Certs {
+			certs = append(certs, certificate.ProtoToCertificate(cert))
+		}
+
+		return certs, nil
 	})
 
 	app.admin.SetExportOperatorFunc(func(name string, path string) (string, error) {
@@ -348,7 +369,7 @@ func (app *App) initAdmin() {
 		return filepath.Abs(path)
 	})
 
-	app.admin.SetAddOperatorFunc(func(name string, isAdmin bool, server string) (*pb.Operator, *pb.OperatorCredentials, error) {
+	app.admin.SetAddOperatorFunc(func(name string, isAdmin bool, server string) (*operator.Operator, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
@@ -360,10 +381,10 @@ func (app *App) initAdmin() {
 			},
 		})
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
-		return r.Operator, r.Credentials, nil
+		return operator.ProtoToOperator(r.Operator), nil
 	})
 
 	app.admin.SetDelOperatorFunc(func(name string) error {
@@ -410,16 +431,19 @@ func (app *App) initAdmin() {
 		return err
 	})
 
-	app.admin.SetMetadataFunc(func() (*pb.GetMetadataResp, error) {
+	app.admin.SetMetadataFunc(func() (*config.Config, *operator.Operator, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
 		r, err := app.operator.Client().GetMetadata(ctx, &pb.Empty{})
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		return r, nil
+		config := config.ProtoToConfig(r.Config)
+		operator := operator.ProtoToOperator(r.Operator)
+
+		return config, operator, nil
 	})
 
 	app.pages.AddPage(app.credentials.GetID(), app.credentials, true, false)

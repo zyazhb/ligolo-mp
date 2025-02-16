@@ -8,8 +8,9 @@ import (
 	forms "github.com/ttpreport/ligolo-mp/cmd/client/tui/forms"
 	modals "github.com/ttpreport/ligolo-mp/cmd/client/tui/modals"
 	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/internal/config"
 	"github.com/ttpreport/ligolo-mp/internal/operator"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
 )
 
 type AdminPage struct {
@@ -22,13 +23,13 @@ type AdminPage struct {
 
 	setFocus func(tview.Primitive)
 
-	getMetadata     func() (*pb.GetMetadataResp, error)
-	getOperators    func() ([]*pb.Operator, error)
-	getCertificates func() ([]*pb.Cert, error)
+	getMetadata     func() (*config.Config, *operator.Operator, error)
+	getOperators    func() ([]*operator.Operator, error)
+	getCertificates func() ([]*certificate.Certificate, error)
 	switchback      func()
 
 	exportOperator  func(string, string) (string, error)
-	addOperator     func(string, bool, string) (*pb.Operator, *pb.OperatorCredentials, error)
+	addOperator     func(string, bool, string) (*operator.Operator, error)
 	delOperator     func(string) error
 	promoteOperator func(string) error
 	demoteOperator  func(string) error
@@ -213,7 +214,7 @@ func (admin *AdminPage) InputHandler() func(event *tcell.EventKey, setFocus func
 				gen := forms.NewOperatorForm()
 				gen.SetSubmitFunc(func(name string, isAdmin bool, server string) {
 					admin.DoWithLoader("Creating operator...", func() {
-						oper, _, err := admin.addOperator(name, isAdmin, server)
+						oper, err := admin.addOperator(name, isAdmin, server)
 						if err != nil {
 							admin.ShowError(fmt.Sprintf("Could not create operator: %s", err), nil)
 							return
@@ -272,16 +273,16 @@ func (admin *AdminPage) RefreshData() {
 	}
 	admin.certs.SetData(certs)
 
-	metadata, err := admin.getMetadata()
+	config, operator, err := admin.getMetadata()
 	if err != nil {
 		admin.ShowError(fmt.Sprintf("Could not fetch metadata: %s", err), nil)
 		return
 	}
 
-	admin.server.SetData(metadata)
+	admin.server.SetData(config, operator)
 }
 
-func (admin *AdminPage) SetMetadataFunc(f func() (*pb.GetMetadataResp, error)) {
+func (admin *AdminPage) SetMetadataFunc(f func() (*config.Config, *operator.Operator, error)) {
 	admin.getMetadata = f
 }
 
@@ -293,7 +294,7 @@ func (admin *AdminPage) SetExportOperatorFunc(f func(string, string) (string, er
 	admin.exportOperator = f
 }
 
-func (admin *AdminPage) SetAddOperatorFunc(f func(string, bool, string) (*pb.Operator, *pb.OperatorCredentials, error)) {
+func (admin *AdminPage) SetAddOperatorFunc(f func(string, bool, string) (*operator.Operator, error)) {
 	admin.addOperator = f
 }
 
@@ -317,11 +318,11 @@ func (admin *AdminPage) SetSwitchbackFunc(f func()) {
 	admin.switchback = f
 }
 
-func (admin *AdminPage) SetOperatorsFunc(f func() ([]*pb.Operator, error)) {
+func (admin *AdminPage) SetOperatorsFunc(f func() ([]*operator.Operator, error)) {
 	admin.getOperators = f
 }
 
-func (admin *AdminPage) SetCertificatesFunc(f func() ([]*pb.Cert, error)) {
+func (admin *AdminPage) SetCertificatesFunc(f func() ([]*certificate.Certificate, error)) {
 	admin.getCertificates = f
 }
 

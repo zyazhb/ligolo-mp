@@ -7,7 +7,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/operator"
 )
 
 type OperatorsWidget struct {
@@ -38,7 +38,7 @@ func NewOperatorsWidget() *OperatorsWidget {
 	return widget
 }
 
-func (widget *OperatorsWidget) SetData(data []*pb.Operator) {
+func (widget *OperatorsWidget) SetData(data []*operator.Operator) {
 	widget.Clear()
 
 	widget.data = nil
@@ -92,10 +92,10 @@ func (widget *OperatorsWidget) SetSelectedFunc(f func(*OperatorsWidgetElem)) {
 }
 
 type OperatorsWidgetElem struct {
-	Operator *pb.Operator
+	Operator *operator.Operator
 }
 
-func NewOperatorsWidgetElem(operator *pb.Operator) *OperatorsWidgetElem {
+func NewOperatorsWidgetElem(operator *operator.Operator) *OperatorsWidgetElem {
 	return &OperatorsWidgetElem{
 		Operator: operator,
 	}

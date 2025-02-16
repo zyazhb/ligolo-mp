@@ -6,13 +6,14 @@ import (
 
 	"github.com/rivo/tview"
 
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/config"
+	"github.com/ttpreport/ligolo-mp/internal/operator"
 )
 
 type ServerWidget struct {
 	*tview.TextView
-	operator     *pb.Operator
-	serverConfig *pb.Config
+	operator     *operator.Operator
+	serverConfig *config.Config
 	fetchConfig  func()
 }
 
@@ -28,10 +29,10 @@ func NewServerWidget() *ServerWidget {
 	return widget
 }
 
-func (widget *ServerWidget) SetData(metadata *pb.GetMetadataResp) {
+func (widget *ServerWidget) SetData(config *config.Config, oper *operator.Operator) {
 	widget.Clear()
-	widget.operator = metadata.Operator
-	widget.serverConfig = metadata.Config
+	widget.operator = oper
+	widget.serverConfig = config
 	widget.Refresh()
 }
 
@@ -42,7 +43,7 @@ func (widget *ServerWidget) Refresh() {
 			access = "admin"
 		}
 
-		text := fmt.Sprintf("Operator: %s@%s (%s) | Agent server: %s", widget.operator.Name, widget.operator.Server, access, widget.serverConfig.AgentServer)
+		text := fmt.Sprintf("Operator: %s@%s (%s) | Agent server: %s", widget.operator.Name, widget.operator.Server, access, widget.serverConfig.ListenInterface)
 		widget.SetText(text)
 	}
 }

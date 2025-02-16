@@ -6,13 +6,14 @@ import (
 
 	"github.com/rivo/tview"
 	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/internal/protocol"
+	"github.com/ttpreport/ligolo-mp/internal/session"
 )
 
 type InterfacesWidget struct {
 	*tview.Table
-	data            []*pb.Interface
-	selectedSession *pb.Session
+	data            []protocol.NetInterface
+	selectedSession *session.Session
 }
 
 func NewInterfacesWidget() *InterfacesWidget {
@@ -38,12 +39,12 @@ func NewInterfacesWidget() *InterfacesWidget {
 	return widget
 }
 
-func (widget *InterfacesWidget) SetData(data []*pb.Session) {
+func (widget *InterfacesWidget) SetData(data []*session.Session) {
 	widget.Clear()
 
 	widget.data = nil
 	for _, session := range data {
-		for _, iface := range session.Interfaces {
+		for _, iface := range session.Interfaces.All() {
 			widget.data = append(widget.data, iface)
 		}
 	}
@@ -51,7 +52,7 @@ func (widget *InterfacesWidget) SetData(data []*pb.Session) {
 	widget.Refresh()
 }
 
-func (widget *InterfacesWidget) SetSelectedSession(sess *pb.Session) {
+func (widget *InterfacesWidget) SetSelectedSession(sess *session.Session) {
 	widget.Clear()
 	widget.selectedSession = sess
 	widget.Refresh()
@@ -72,8 +73,8 @@ func (widget *InterfacesWidget) Refresh() {
 
 	if widget.selectedSession != nil {
 		rowId := 1
-		for _, elem := range widget.selectedSession.Interfaces {
-			for _, IP := range elem.IPs {
+		for _, elem := range widget.selectedSession.Interfaces.All() {
+			for _, IP := range elem.Addresses {
 				widget.SetCell(rowId, 0, tview.NewTableCell(elem.Name))
 				widget.SetCell(rowId, 1, tview.NewTableCell(IP))
 

@@ -333,10 +333,6 @@ func (s *ligoloServer) AddOperator(ctx context.Context, in *pb.AddOperatorReq) (
 
 	return &pb.AddOperatorResp{
 		Operator: newOperator.Proto(),
-		Credentials: &pb.OperatorCredentials{
-			Cert: newOperator.Cert.Proto(),
-			CA:   newOperator.CA,
-		},
 	}, nil
 }
 
