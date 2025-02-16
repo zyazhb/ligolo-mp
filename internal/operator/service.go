@@ -23,6 +23,22 @@ func NewOperatorService(cfg *config.Config, repo *OperatorRepository, certServic
 	}
 }
 
+func (service *OperatorService) Init() error {
+	operators, err := service.AllOperators()
+	if err != nil {
+		return err
+	}
+
+	if len(operators) < 1 {
+		_, err := service.NewOperator("admin", true, service.config.OperatorAddr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (service *OperatorService) NewOperator(name string, isAdmin bool, server string) (*Operator, error) {
 	oper := &Operator{
 		Name:    name,

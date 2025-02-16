@@ -265,7 +265,11 @@ func (sess *Session) RemoveRedirector(redirectorID string) error {
 }
 
 func (sess *Session) CleanUp() {
-	sess.Tun.Stop()
+	if sess.Tun != nil {
+		sess.Tun.Stop()
+	}
+
+	sess.Tun = nil
 }
 
 func (sess *Session) remoteGetInfo() (protocol.InfoReplyPacket, error) {

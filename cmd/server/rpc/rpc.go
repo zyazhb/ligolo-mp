@@ -11,7 +11,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ttpreport/ligolo-mp/assets"
+	"github.com/ttpreport/ligolo-mp/internal/asset"
 	"github.com/ttpreport/ligolo-mp/internal/certificate"
 	"github.com/ttpreport/ligolo-mp/internal/config"
 	"github.com/ttpreport/ligolo-mp/internal/events"
@@ -31,7 +31,7 @@ type ligoloServer struct {
 	sessService   *session.SessionService
 	certService   *certificate.CertificateService
 	operService   *operator.OperatorService
-	assetsService *assets.AssetsService
+	assetsService *asset.AssetService
 }
 
 type ligoloConnection struct {
@@ -525,7 +525,7 @@ func (s *ligoloServer) unaryAuthInterceptor(ctx context.Context, req any, info *
 	)
 }
 
-func Run(config *config.Config, certService *certificate.CertificateService, sessService *session.SessionService, operService *operator.OperatorService, assetsService *assets.AssetsService) error {
+func Run(config *config.Config, certService *certificate.CertificateService, sessService *session.SessionService, operService *operator.OperatorService, assetsService *asset.AssetService) error {
 	lis, err := net.Listen("tcp", config.OperatorAddr)
 	if err != nil {
 		slog.Error("Could not start operator server",

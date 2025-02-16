@@ -91,9 +91,7 @@ func (t *Tun) Stop() {
 	slog.Debug("removing tun", slog.Any("tun", t))
 
 	link, err := netlink.LinkByIndex(t.ID)
-	if err != nil {
-		slog.Warn("link not found", slog.Any("err", err), slog.Any("id", t.ID))
-	} else {
+	if err == nil {
 		if err := netlink.LinkDel(link); err != nil {
 			slog.Error("could not delete link", slog.Any("error", err))
 		}
@@ -101,9 +99,7 @@ func (t *Tun) Stop() {
 
 	slog.Debug("tun removed", slog.Any("tun", t))
 
-	if t.netstack == nil {
-		slog.Warn("netstack not found")
-	} else {
+	if t.netstack != nil {
 		if err := t.netstack.Destroy(); err != nil {
 			slog.Error("could not destroy netstack", slog.Any("err", err), slog.Any("netstack", t.netstack))
 		}

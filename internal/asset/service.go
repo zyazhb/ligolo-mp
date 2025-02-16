@@ -1,11 +1,11 @@
-package assets
+package asset
 
 import (
 	"archive/zip"
 	"bytes"
-	"embed"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/url"
 	"os"
@@ -15,23 +15,21 @@ import (
 	"text/template"
 
 	"github.com/rs/xid"
+	"github.com/ttpreport/ligolo-mp/artifacts"
 	"github.com/ttpreport/ligolo-mp/internal/config"
 	"github.com/ttpreport/ligolo-mp/internal/gogo"
 )
 
-var (
-	//go:embed artifacts/agent.zip artifacts/go.zip
-	FS embed.FS
-)
-
-type AssetsService struct {
+type AssetService struct {
+	repo                  *AssetRepository
 	config                *config.Config
 	supportedProxySchemes []string
 }
 
-func NewAssetsService(cfg *config.Config) *AssetsService {
-	return &AssetsService{
+func NewAssetsService(cfg *config.Config, repo *AssetRepository) *AssetService {
+	return &AssetService{
 		config: cfg,
+		repo:   repo,
 		supportedProxySchemes: []string{
 			"socks5",
 			"socks5h",
@@ -41,13 +39,44 @@ func NewAssetsService(cfg *config.Config) *AssetsService {
 	}
 }
 
-func (assets *AssetsService) Unpack() error {
-	err := os.RemoveAll(assets.config.GetAssetsDir())
+func (assets *AssetService) Init() error {
+	currentGo := assets.repo.GetOne("go")
+	distGo := assets.GetDistGo()
+
+	if currentGo == nil || !currentGo.Equal(distGo) {
+		slog.Debug("Current go differs from dist, updating")
+		if err := assets.UnpackDistGo(); err != nil {
+			return err
+		}
+
+		slog.Debug("Current go updated")
+		assets.repo.Save(distGo)
+	} else {
+		slog.Debug("Current go same as dist, no update needed")
+	}
+
+	return nil
+}
+
+func (assets *AssetService) GetDistGo() *Asset {
+	distGo, err := artifacts.GetGoArchive()
+	if err != nil {
+		return nil
+	}
+
+	asset := NewAsset("go")
+	asset.SetContent(distGo)
+
+	return asset
+}
+
+func (assets *AssetService) UnpackDistGo() error {
+	err := os.RemoveAll(filepath.Join(assets.config.GetAssetsDir(), "go"))
 	if err != nil {
 		return err
 	}
 
-	a, err := FS.ReadFile("artifacts/go.zip")
+	a, err := artifacts.GetGoArchive()
 	if err != nil {
 		return err
 	}
@@ -60,7 +89,7 @@ func (assets *AssetsService) Unpack() error {
 	return nil
 }
 
-func (assets *AssetsService) renderAgent(proxyServer string, servers string, CACert string, AgentCert string, AgentKey string, IgnoreEnvProxy bool) (string, error) {
+func (assets *AssetService) renderAgent(proxyServer string, servers string, CACert string, AgentCert string, AgentKey string, IgnoreEnvProxy bool) (string, error) {
 	agentDir, err := assets.setupAgentDir()
 	if err != nil {
 		return "", err
@@ -68,7 +97,7 @@ func (assets *AssetsService) renderAgent(proxyServer string, servers string, CAC
 
 	srcDir := filepath.Join(agentDir, "src")
 
-	a, err := FS.ReadFile("artifacts/agent.zip")
+	a, err := artifacts.GetAgentArchive()
 	if err != nil {
 		return "", err
 	}
@@ -113,7 +142,7 @@ func (assets *AssetsService) renderAgent(proxyServer string, servers string, CAC
 	return agentDir, err
 }
 
-func (assets *AssetsService) setupAgentDir() (string, error) {
+func (assets *AssetService) setupAgentDir() (string, error) {
 	agentDir := filepath.Join(assets.config.GetAssetsDir(), "agents", xid.New().String())
 
 	if _, err := os.Stat(agentDir); os.IsNotExist(err) {
@@ -137,7 +166,7 @@ func (assets *AssetsService) setupAgentDir() (string, error) {
 	return "", nil
 }
 
-func (assets *AssetsService) CompileAgent(goos string, goarch string, obfuscate bool, proxyServer string, servers string, CACert string, AgentCert string, AgentKey string, IgnoreEnvProxy bool) ([]byte, error) {
+func (assets *AssetService) CompileAgent(goos string, goarch string, obfuscate bool, proxyServer string, servers string, CACert string, AgentCert string, AgentKey string, IgnoreEnvProxy bool) ([]byte, error) {
 	for _, server := range strings.Split(servers, "\n") {
 		if _, _, err := net.SplitHostPort(server); err != nil {
 			return nil, fmt.Errorf("%s is invalid server: %s", server, err)
