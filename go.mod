@@ -15,7 +15,6 @@ require (
 	github.com/rivo/tview v0.0.0-20240807205129-e4c497cc59ed
 	github.com/rs/xid v1.6.0
 	github.com/vishvananda/netlink v1.3.0
-	golang.org/x/sys v0.30.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
 	gvisor.dev/gvisor v0.0.0-20250215002057-313350f3e697
@@ -36,6 +35,7 @@ require (
 	github.com/vishvananda/netns v0.0.5 // indirect
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f // indirect
 	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.10.0 // indirect

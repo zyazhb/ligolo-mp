@@ -1,5 +1,4 @@
 //go:build linux
-// +build linux
 
 package tun
 
@@ -10,7 +9,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 )
 
-func Open(tunName string) (stack.LinkEndpoint, int, error) {
+func New(tunName string) (stack.LinkEndpoint, int, error) {
 	mtu, err := rawfile.GetMTU(tunName)
 	if err != nil {
 		return nil, 0, err

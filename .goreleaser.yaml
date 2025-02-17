@@ -1,3 +1,4 @@
+version: 2
 project_name: ligolo-mp
 
 before:
@@ -24,7 +25,7 @@ builds:
       - 7
 
   - main: ./cmd/client
-    id: "client-linux"
+    id: "client"
     binary: client
     env: [CGO_ENABLED=0]
     flags:
@@ -32,25 +33,11 @@ builds:
       - -mod=vendor
     goos:
       - linux
-    goarch:
-      - 386
-      - amd64
-      - arm64
-    goarm:
-      - 6
-      - 7
-
-  - main: ./cmd/client
-    id: "client-windows"
-    binary: client
-    env: [CGO_ENABLED=0]
-    flags:
-      - -trimpath
-      - -mod=vendor
-    goos:
       - windows
       - darwin
+      - freebsd
     goarch:
+      - 386
       - amd64
       - arm64
     goarm:
@@ -61,14 +48,14 @@ archives:
   - 
     id: "server"
     builds: ['server']
-    name_template: "{{ .ProjectName }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
-    format: binary
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
+    format: 'binary'
 
   - 
     id: "client"
     builds: ['client-linux', 'client-windows']
     name_template: "{{ .ProjectName }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
-    format: binary
+    format: 'binary'
 
 release:
   github:

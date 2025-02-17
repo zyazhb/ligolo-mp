@@ -13,7 +13,6 @@ import (
 	"github.com/ttpreport/ligolo-mp/internal/protocol"
 	"github.com/ttpreport/ligolo-mp/internal/relay"
 	"github.com/ttpreport/ligolo-mp/internal/route"
-	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -94,7 +93,6 @@ type NetStack struct {
 	stack *stack.Stack
 	sync.Mutex
 	closeChan chan bool
-	fd        int
 }
 
 // GetStack returns the current Gvisor stack.Stack object
@@ -113,7 +111,6 @@ func (s *NetStack) SetConnPool(connPool *ConnPool) {
 func (s *NetStack) Destroy() error {
 	s.pool.Close()
 	s.closeChan <- true
-	unix.Close(s.fd)
 	s.stack.Destroy()
 
 	return nil
@@ -174,7 +171,7 @@ func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, lo
 
 	yamuxConnectionSession, err := multiplex.Open()
 	if err != nil {
-		slog.Error("Packet handler encountered an error #1",
+		slog.Debug("Packet handler encountered an error #1",
 			slog.Any("error", err),
 		)
 		return
@@ -188,7 +185,7 @@ func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, lo
 		Type:    protocol.MessageConnectRequest,
 		Payload: connectPacket,
 	}); err != nil {
-		slog.Error("Packet handler encountered an error #2",
+		slog.Debug("Packet handler encountered an error #2",
 			slog.Any("error", err),
 		)
 		return
@@ -196,7 +193,7 @@ func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, lo
 
 	if err := protocolDecoder.Decode(); err != nil {
 		if err != io.EOF {
-			slog.Error("Packet handler encountered an error #3",
+			slog.Debug("Packet handler encountered an error #3",
 				slog.Any("error", err),
 			)
 		}
@@ -211,7 +208,7 @@ func (ns *NetStack) HandlePacket(localConn TunConn, multiplex *yamux.Session, lo
 		if localConn.IsTCP() {
 			ep, iperr := localConn.GetTCP().Request.CreateEndpoint(&wq)
 			if iperr != nil {
-				slog.Error("Packet handler encountered an error #4",
+				slog.Debug("Packet handler encountered an error #4",
 					slog.Any("error", iperr),
 				)
 				return
@@ -602,12 +599,10 @@ func NewNetstack(maxConnections int, maxInFlight int, tunName string) (*NetStack
 	ns.stack.SetTransportProtocolHandler(tcp.ProtocolNumber, tcpHandler.HandlePacket)
 	ns.stack.SetTransportProtocolHandler(udp.ProtocolNumber, udpHandler.HandlePacket)
 
-	linkEP, fd, err := tun.Open(tunName)
+	linkEP, _, err := tun.New(tunName)
 	if err != nil {
 		return nil, err
 	}
-
-	ns.fd = fd
 
 	// Create a new NIC
 	if err := ns.stack.CreateNIC(1, linkEP); err != nil {

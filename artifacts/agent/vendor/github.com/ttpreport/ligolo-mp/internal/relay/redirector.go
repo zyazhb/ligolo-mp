@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -39,4 +40,8 @@ func (s *Redirector) ListenAndRelay() error {
 
 func (s *Redirector) Close() error {
 	return s.Listener.Close()
+}
+
+func (s *Redirector) String() string {
+	return fmt.Sprintf("ID=%s Network=%s From=%s To=%s", s.ID, s.Network, s.From, s.To)
 }

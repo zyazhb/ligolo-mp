@@ -7,10 +7,10 @@ import (
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/internal/netstack"
+	"github.com/ttpreport/ligolo-mp/internal/netstack/tunlink"
 	"github.com/ttpreport/ligolo-mp/internal/route"
 	"github.com/ttpreport/ligolo-mp/pkg/memstore"
 	pb "github.com/ttpreport/ligolo-mp/protobuf"
-	"github.com/vishvananda/netlink"
 )
 
 type Tun struct {
@@ -35,25 +35,15 @@ func (t *Tun) Start(multiplex *yamux.Session, maxConnections int, maxInFlight in
 		return nil
 	}
 
-	slog.Debug("creating tun")
-	la := netlink.NewLinkAttrs()
-
-	link := &netlink.Tuntap{
-		LinkAttrs: la,
-		Mode:      netlink.TUNTAP_MODE_TUN,
-	}
-	if err := netlink.LinkAdd(link); err != nil {
+	linkID, linkName, err := tunlink.New()
+	if err != nil {
+		slog.Error("could not create tun link")
 		return err
 	}
-	slog.Debug("tun link created", slog.Any("link", link))
+	slog.Debug("tun link created", slog.Any("id", linkID), slog.Any("name", linkName))
 
-	t.ID = link.Index
-	t.Name = link.Name
-
-	if err := netlink.LinkSetUp(link); err != nil {
-		return err
-	}
-	slog.Debug("interface set up")
+	t.ID = linkID
+	t.Name = linkName
 
 	ns, err := netstack.NewNetstack(maxConnections, maxInFlight, t.Name)
 	if err != nil {
@@ -89,20 +79,14 @@ func (t *Tun) Start(multiplex *yamux.Session, maxConnections int, maxInFlight in
 }
 
 func (t *Tun) Stop() {
-	slog.Debug("removing tun", slog.Any("tun", t))
-
-	link, err := netlink.LinkByIndex(t.ID)
-	if err == nil {
-		if err := netlink.LinkDel(link); err != nil {
-			slog.Error("could not delete link", slog.Any("error", err))
-		}
+	if err := tunlink.Remove(t.ID); err != nil {
+		slog.Debug("could not delete link", slog.Any("error", err))
 	}
-
 	slog.Debug("tun removed", slog.Any("tun", t))
 
 	if t.netstack != nil {
 		if err := t.netstack.Destroy(); err != nil {
-			slog.Error("could not destroy netstack", slog.Any("err", err), slog.Any("netstack", t.netstack))
+			slog.Debug("could not destroy netstack", slog.Any("err", err), slog.Any("netstack", t.netstack))
 		}
 	}
 
@@ -118,12 +102,9 @@ func (t *Tun) ApplyRoutes() error {
 		}
 
 		for _, route := range t.Routes.All() {
-			route := &netlink.Route{
-				LinkIndex: t.ID,
-				Dst:       route.Cidr,
-			}
-			if err := netlink.RouteAdd(route); err != nil {
-				slog.Warn("could not add route to the system", slog.Any("err", err), slog.Any("route", route))
+			err := tunlink.AddRoute(t.ID, route.Cidr)
+			if err != nil {
+				slog.Error("could not add route to the system", slog.Any("err", err), slog.Any("route", route))
 			}
 		}
 	}
@@ -132,21 +113,10 @@ func (t *Tun) ApplyRoutes() error {
 }
 
 func (t *Tun) removeAllRoutes() error {
-	link, err := netlink.LinkByIndex(t.ID)
+	err := tunlink.RemoveAllRoutes(t.ID)
 	if err != nil {
 		slog.Error("could not find link", slog.Any("link_id", t.ID))
 		return err
-	}
-
-	currentRoutes, err := netlink.RouteList(link, netlink.FAMILY_ALL)
-	if err != nil {
-		slog.Warn("could not get current system routes", slog.Any("link", link))
-	}
-
-	for _, route := range currentRoutes {
-		if err := netlink.RouteDel(&route); err != nil {
-			slog.Warn("could not delete route", slog.Any("route", route))
-		}
 	}
 
 	return nil
@@ -191,11 +161,7 @@ func (t *Tun) RemoveRoute(cidr string) error {
 }
 
 func (t *Tun) GetName() (string, error) {
-	link, err := netlink.LinkByIndex(t.ID)
-	if err != nil {
-		return "", err
-	}
-	return link.Attrs().Name, nil
+	return tunlink.GetName(t.ID)
 }
 
 func (t *Tun) GetRoutes() []route.Route {

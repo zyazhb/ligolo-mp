@@ -14,24 +14,24 @@ binaries: server client
 .PHONY: go
 go:
 	# Build go
-	cd assets/artifacts && curl -L --output go$(GO_VER).linux-amd64.tar.gz https://dl.google.com/go/go$(GO_VER).linux-amd64.tar.gz
-	cd assets/artifacts && tar xvf go$(GO_VER).linux-amd64.tar.gz
-	cd assets/artifacts/go && rm -rf $(BLOAT_FILES)
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/doc
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/tour
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/test2json
+	cd artifacts && curl -L --output go$(GO_VER).linux-amd64.tar.gz https://dl.google.com/go/go$(GO_VER).linux-amd64.tar.gz
+	cd artifacts && tar xvf go$(GO_VER).linux-amd64.tar.gz
+	cd artifacts/go && rm -rf $(BLOAT_FILES)
+	rm -f artifacts/go/pkg/tool/linux_amd64/doc
+	rm -f artifacts/go/pkg/tool/linux_amd64/tour
+	rm -f artifacts/go/pkg/tool/linux_amd64/test2json
 	# Build garble
-	cd assets/artifacts/go/bin && curl -L --output garble https://github.com/ttpreport/garble/releases/download/v$(GARBLE_VER)/garble_linux_amd64 && chmod +x garble
+	cd artifacts/go/bin && curl -L --output garble https://github.com/ttpreport/garble/releases/download/v$(GARBLE_VER)/garble_linux_amd64 && chmod +x garble
 	# Bundle
-	cd assets/artifacts && zip -r go.zip ./go
+	cd artifacts && zip -r go.zip ./go
 	# Clean up
-	cd assets/artifacts && rm -rf go go$(GO_VER).linux-amd64.tar.gz
+	cd artifacts && rm -rf go go$(GO_VER).linux-amd64.tar.gz
 
 .PHONY: agent
 agent:
-	cd assets/agent && go mod tidy
-	cd assets/agent && go mod vendor
-	cd assets/agent && zip -r ../artifacts/agent.zip .
+	cd artifacts/agent && go mod tidy
+	cd artifacts/agent && go mod vendor
+	cd artifacts/agent && zip -r ../agent.zip .
 
 .PHONY: server
 server:
@@ -48,7 +48,7 @@ protobuf:
 
 .PHONY: clean
 clean:
-	rm -rf assets/artifacts/agent.zip assets/artifacts/go.zip
+	rm -rf artifacts/agent.zip artifacts/go.zip
 
 .PHONY: install
 install:
