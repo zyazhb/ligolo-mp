@@ -49,18 +49,13 @@ echo "Running from $(pwd)"
 
 echo "Fetching latest ligolo-mp release..."
 ARTIFACTS=$(curl -s "https://api.github.com/repos/ttpreport/ligolo-mp/releases/latest" | awk -F '"' '/browser_download_url/{print $4}')
-SERVER_BINARY="ligolo-mp_server_linux_${ARCH}"
-CLIENT_BINARY="ligolo-mp_client_linux_${ARCH}"
+SERVER_BINARY="ligolo-mp_linux_${ARCH}"
 CHECKSUMS_FILE="ligolo-mp_checksums.txt"
 
 
 for URL in $ARTIFACTS
 do
     if [[ "$URL" == *"$SERVER_BINARY"* ]]; then
-        echo "Downloading $URL"
-        curl --silent -L "$URL" --output "$(basename "$URL")"
-    fi
-    if [[ "$URL" == *"$CLIENT_BINARY"* ]]; then
         echo "Downloading $URL"
         curl --silent -L "$URL" --output "$(basename "$URL")"
     fi
@@ -76,48 +71,16 @@ sha256sum --ignore-missing -c ligolo-mp_checksums.txt || (echo "Signature mismat
 echo
 
 if test -f "/root/$SERVER_BINARY"; then
-    echo "Moving the server executable to /root/ligolo-mp-server..."
-    mv "/root/$SERVER_BINARY" /root/ligolo-mp-server
+    echo "Moving the executable to /usr/local/bin/ligolo-mp..."
+    mv "/root/$SERVER_BINARY" /usr/local/bin/ligolo-mp
 
     echo "Setting permissions for the server executable..."
-    chmod 755 /root/ligolo-mp-server
+    chmod 755 /usr/local/bin/ligolo-mp
     echo
 else
     echo "$SERVER_BINARY not found! Aborting..." 
     exit 3
 fi
-
-if test -f "/root/$CLIENT_BINARY"; then
-    echo "Copying the client executable to /usr/local/bin/ligolo-mp-client..."
-    mv "/root/$CLIENT_BINARY" /usr/local/bin/ligolo-mp-client
-
-    echo "Setting permissions for the client executable..."
-    chmod 755 /usr/local/bin/ligolo-mp-client
-
-    echo "Creating a symbolic link for client at /usr/local/bin/ligolo-mp..."
-    ln -sf /usr/local/bin/ligolo-mp-client /usr/local/bin/ligolo-mp
-
-    echo "Setting permissions for the symbolic link /usr/local/bin/ligolo-mp..."
-    chmod 755 /usr/local/bin/ligolo-mp
-    echo
-else
-    echo "$CLIENT_BINARY not found! Aborting..." 
-    exit 3
-fi
-
-echo "Stopping Ligolo-mp service..."
-systemctl stop ligolo-mp
-echo
-
-echo "Unpacking server files..."
-/root/ligolo-mp-server -unpack
-echo
-
-echo "Initializing operators..."
-echo -n "IP to reach the server [e.g. 127.0.0.1]: "
-read SERVER_ADDR
-/root/ligolo-mp-server -init-operators -operator-addr "$SERVER_ADDR:58008"
-echo
 
 # systemd
 echo "Configuring systemd service ..."
@@ -132,7 +95,7 @@ Type=simple
 Restart=on-failure
 RestartSec=3
 User=root
-ExecStart=/root/ligolo-mp-server
+ExecStart=/usr/local/bin/ligolo-mp -daemon
 
 [Install]
 WantedBy=multi-user.target
@@ -143,5 +106,7 @@ chmod 600 /etc/systemd/system/ligolo-mp.service
 echo
 
 echo "Starting the Ligolo-mp service..."
-systemctl start ligolo-mp
+systemctl daemon-reload
+systemctl enable ligolo-mp
+systemctl restart ligolo-mp
 echo
