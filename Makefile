@@ -52,4 +52,4 @@ clean:
 
 .PHONY: install
 install:
-	./install.sh
+	./install_server.sh
