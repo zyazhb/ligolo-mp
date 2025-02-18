@@ -5,32 +5,8 @@ if [[ "$EUID" -ne 0 ]]; then
     exit
 fi
 
-if command -v apt-get &> /dev/null; then # Debian-based OS (Debian, Ubuntu, etc)
-    echo "Installing dependencies using apt..."
-    DEBIAN_FRONTEND=noninteractive apt-get install -yqq \
-        gpg curl build-essential git \
-        mingw-w64 binutils-mingw-w64 g++-mingw-w64
-        INSTALLER=(apt-get install -yqq)
-elif command -v yum &> /dev/null; then # Redhat-based OS (Fedora, CentOS, RHEL)
-    echo "Installing dependencies using yum..."
-    yum -y install gnupg curl gcc gcc-c++ make mingw64-gcc git
-        INSTALLER=(yum -y)
-elif command -v pacman &>/dev/null; then # Arch-based (Manjaro, Garuda, Blackarch)
-        echo "Installing dependencies using pacman..."
-        pacman --noconfirm -S mingw-w64-gcc mingw-w64-binutils mingw-w64-headers
-    INSTALLER=(pacman --noconfirm -S)
-else
-    echo "Unsupported OS, exiting"
-    exit
-fi
-
-# Verify if necessary tools are installed
-for cmd in curl awk gpg; do
-    if ! command -v "$cmd" &> /dev/null; then
-        echo "$cmd could not be found, installing..."
-                ${INSTALLER[@]} "$cmd"
-    fi
-done
+echo "Installing dependencies..."
+./install_deps.sh
 
 ARCH=$(uname -m)
 case $ARCH in
@@ -82,31 +58,11 @@ else
     exit 3
 fi
 
-# systemd
 echo "Configuring systemd service ..."
-cat > /etc/systemd/system/ligolo-mp.service <<-EOF
-[Unit]
-Description=Ligolo-mp
-After=network.target
-StartLimitIntervalSec=0
-
-[Service]
-Type=simple
-Restart=on-failure
-RestartSec=3
-User=root
-ExecStart=/usr/local/bin/ligolo-mp -daemon
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-chown root:root /etc/systemd/system/ligolo-mp.service
-chmod 600 /etc/systemd/system/ligolo-mp.service
+./install_service.sh
 echo
 
 echo "Starting the Ligolo-mp service..."
-systemctl daemon-reload
 systemctl enable ligolo-mp
 systemctl restart ligolo-mp
 echo
