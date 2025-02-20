@@ -1,10 +1,31 @@
-TARGET_OS ?= linux
-TARGET_ARCH ?= amd64
-GO_VER = 1.23.5
-BLOAT_FILES = AUTHORS CONTRIBUTORS PATENTS VERSION favicon.ico robots.txt SECURITY.md CONTRIBUTING.md LICENSE README.md ./doc ./test ./api ./misc
-GARBLE_VER = 1.23.5
+GO_VER := 1.23.5
+BLOAT_FILES := AUTHORS CONTRIBUTORS PATENTS VERSION favicon.ico robots.txt SECURITY.md CONTRIBUTING.md LICENSE README.md ./doc ./test ./api ./misc
+GARBLE_VER := 1.23.5
 
 GO ?= go
+
+ARCH := $(shell uname -m)
+
+ifeq ($(ARCH),aarch64)
+    ARCH := arm64
+else ifneq (,$(findstring armv5,$(ARCH)))
+    ARCH := armv5
+else ifneq (,$(findstring armv6,$(ARCH)))
+    ARCH := armv6
+else ifneq (,$(findstring armv7,$(ARCH)))
+    ARCH := arm
+else ifeq ($(ARCH),x86_64)
+    ARCH := amd64
+else ifeq ($(ARCH),x86)
+    ARCH := 386
+else ifeq ($(ARCH),i686)
+    ARCH := 386
+else ifeq ($(ARCH),i386)
+    ARCH := 386
+endif
+
+TARGET_ARCH ?= $(ARCH)
+TARGET_OS ?= linux
 
 .PHONY: build
 build: assets binaries
