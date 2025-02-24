@@ -10,8 +10,6 @@
 
 ## Features
 
-Everything that you love about Ligolo-ng and:
-
 - Multiplayer
 - Automatic TUN management
 - Unlimited concurrent relays
