@@ -7,12 +7,6 @@ github.com/google/uuid
 # github.com/hashicorp/yamux v0.1.2
 ## explicit; go 1.20
 github.com/hashicorp/yamux
-# github.com/ttpreport/ligolo-mp v2.0.0-wip+incompatible => ../../
-## explicit; go 1.23.5
-github.com/ttpreport/ligolo-mp/internal/netstack/neterror
-github.com/ttpreport/ligolo-mp/internal/netstack/smartping
-github.com/ttpreport/ligolo-mp/internal/protocol
-github.com/ttpreport/ligolo-mp/internal/relay
 # golang.org/x/net v0.35.0
 ## explicit; go 1.18
 golang.org/x/net/bpf
@@ -30,4 +24,3 @@ golang.org/x/sync/errgroup
 ## explicit; go 1.18
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# github.com/ttpreport/ligolo-mp => ../../

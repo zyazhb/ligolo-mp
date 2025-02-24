@@ -16,11 +16,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/yamux"
-	connectproxy "github.com/ttpreport/ligolo-mp/internal/agent/proxy/connect"
-	"github.com/ttpreport/ligolo-mp/internal/netstack/neterror"
-	"github.com/ttpreport/ligolo-mp/internal/netstack/smartping"
-	"github.com/ttpreport/ligolo-mp/internal/protocol"
-	"github.com/ttpreport/ligolo-mp/internal/relay"
+	"github.com/ttpreport/ligolo-mp-agent/internal/neterror"
+	"github.com/ttpreport/ligolo-mp-agent/internal/protocol"
+	connectproxy "github.com/ttpreport/ligolo-mp-agent/internal/proxy/connect"
+	"github.com/ttpreport/ligolo-mp-agent/internal/relay"
+	"github.com/ttpreport/ligolo-mp-agent/internal/smartping"
 	"golang.org/x/net/proxy"
 )
 
