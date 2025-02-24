@@ -1,26 +1,23 @@
-# Ligolo-mp : Tunneling like ligolo-ng, now with friends!
+# Ligolo-MP : pivoting like a VPN, now with friends!
 
-![Ligolo-mp Logo](doc/logo.png)
+![Ligolo-MP Logo](doc/logo.png)
 
 [![Release](https://github.com/ttpreport/ligolo-mp/actions/workflows/release.yml/badge.svg)](https://github.com/ttpreport/ligolo-mp/actions/workflows/release.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/ttpreport/ligolo-mp)](https://goreportcard.com/report/github.com/ttpreport/ligolo-mp) [![GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-> [!WARNING]
-> Version 2.0 is almost complete and will introduce automated TUN management and a more user-friendly UI, but please use it with care: it's still in beta and is undergoing battle-testing - it's not production-ready yet.
+**Ligolo-MP** is an advanced version of Ligolo-ng, with client-server architecture, enabling pentesters to play with multiple concurrent tunnels collaboratively. It manages all your TUNs automatically, while also providing a clean GUI to track everything.
 
-**Ligolo-mp** is a more specialized version of Ligolo-ng, with client-server architecture, enabling pentesters to play with multiple concurrent tunnels collaboratively. Also, with a sprinkle of less important bells and whistles.
-
-![Ligolo-mp Dashboard](doc/dashboard-1.png)
+![Ligolo-MP Dashboard](doc/dashboard-1.png)
 
 ## Features
 
 Everything that you love about Ligolo-ng and:
 
 - Multiplayer
-- Multiple concurrent relays
 - Automatic TUN management
+- Unlimited concurrent relays
 - SOCKS and HTTP proxy support
 - Routing to the loopback of target machine (no more port forwarding)
-- Listeners are now independent redirectors
+- Listeners are independent redirectors
 - Dynamic mTLS-enabled agent binaries generation with obfuscation option
 - Simplified certificate management
 - Friendly terminal-based GUI
