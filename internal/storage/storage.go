@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"path/filepath"
+	"sync"
 
 	"database/sql"
 
@@ -16,6 +17,7 @@ type Store struct {
 type StoreInstance[T any] struct {
 	*Store
 	table string
+	mu    sync.Mutex
 }
 
 type StorageRow struct {
@@ -52,6 +54,9 @@ func GetInstance[T any](s *Store, table string) (*StoreInstance[T], error) {
 }
 
 func (s *StoreInstance[T]) Set(key string, value *T) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	object, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -63,6 +68,9 @@ func (s *StoreInstance[T]) Set(key string, value *T) error {
 }
 
 func (s *StoreInstance[T]) Get(key string) (*T, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	var result *T
 	row := new(StorageRow)
 	query := "SELECT name, value FROM " + s.table + " WHERE name = ?"
@@ -80,6 +88,9 @@ func (s *StoreInstance[T]) Get(key string) (*T, error) {
 }
 
 func (s *StoreInstance[T]) GetAll() ([]*T, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	var result []*T
 
 	query := "SELECT value FROM " + s.table
@@ -108,12 +119,18 @@ func (s *StoreInstance[T]) GetAll() ([]*T, error) {
 }
 
 func (s *StoreInstance[T]) Del(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	query := "DELETE FROM " + s.table + " WHERE name = ?"
 	_, err := s.db.Exec(query, key)
 	return err
 }
 
 func (s *StoreInstance[T]) DelAll() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	query := "DELETE FROM " + s.table
 	_, err := s.db.Exec(query)
 	return err
