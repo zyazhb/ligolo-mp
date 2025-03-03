@@ -6,71 +6,126 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/ttpreport/ligolo-mp/cmd/server/cli"
+	"github.com/ttpreport/ligolo-mp/cmd/client/tui"
+	"github.com/ttpreport/ligolo-mp/cmd/server/agents"
 	"github.com/ttpreport/ligolo-mp/cmd/server/rpc"
-	"github.com/ttpreport/ligolo-mp/internal/common/config"
-	"github.com/ttpreport/ligolo-mp/internal/core/agents"
-	"github.com/ttpreport/ligolo-mp/internal/core/certs"
-	"github.com/ttpreport/ligolo-mp/internal/core/proxy"
-	"github.com/ttpreport/ligolo-mp/internal/core/storage"
-	"github.com/ttpreport/ligolo-mp/internal/core/tuns"
+	"github.com/ttpreport/ligolo-mp/internal/asset"
+	"github.com/ttpreport/ligolo-mp/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/internal/config"
+	"github.com/ttpreport/ligolo-mp/internal/crl"
+	"github.com/ttpreport/ligolo-mp/internal/operator"
+	"github.com/ttpreport/ligolo-mp/internal/session"
+	"github.com/ttpreport/ligolo-mp/internal/storage"
+	"github.com/ttpreport/ligolo-mp/pkg/logger"
 )
 
 func main() {
-	var daemonFlag = flag.Bool("daemon", false, "enable daemon mode")
-	var verboseFlag = flag.Bool("v", false, "enable verbose mode")
-	var listenInterface = flag.String("agentaddr", "0.0.0.0:11601", "listening address")
-	var maxInflight = flag.Int("maxinflight", 4096, "max inflight TCP connections")
-	var maxConnectionHandler = flag.Int("maxconnection", 4096, "per tunnel connection pool size")
-	var operatorAddr = flag.String("operatoraddr", "0.0.0.0:58008", "Address for operators connections")
+	var daemon = flag.Bool("daemon", false, "enable daemon mode")
+	var verbose = flag.Bool("v", false, "enable verbose mode")
+	var listenInterface = flag.String("agent-addr", "0.0.0.0:11601", "listening address")
+	var maxInflight = flag.Int("max-inflight", 4096, "max inflight TCP connections")
+	var maxConnectionHandler = flag.Int("max-connection", 1024, "per tunnel connection pool size")
+	var operatorAddr = flag.String("operator-addr", "0.0.0.0:58008", "Address for operators connections")
 
 	flag.Parse()
 
+	loggingOpts := &slog.HandlerOptions{}
+	if *verbose {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelDebug)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	} else {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelInfo)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	}
+	logHandler := slog.New(slog.NewTextHandler(os.Stdout, loggingOpts))
+	slog.SetDefault(logHandler)
+
 	cfg := &config.Config{
-		Verbose:              *verboseFlag,
+		Environment:          "server",
+		Verbose:              *verbose,
 		ListenInterface:      *listenInterface,
 		MaxInFlight:          *maxInflight,
 		MaxConnectionHandler: *maxConnectionHandler,
 		OperatorAddr:         *operatorAddr,
 	}
 
-	storage, err := storage.New(config.GetRootAppDir("server"))
-
+	db, err := storage.New(cfg.GetStorageDir())
 	if err != nil {
 		panic(fmt.Sprintf("could not connect to storage: %v", err))
 	}
+	defer db.Close()
 
-	if err = storage.InitServer(); err != nil {
-		panic(fmt.Sprintf("could not init storage: %v", err))
+	certRepo, err := certificate.NewCertificateRepository(db)
+	if err != nil {
+		panic(err)
 	}
 
-	if err = certs.Init(storage); err != nil {
-		panic(fmt.Sprintf("could not initialize certificates: %v", err))
+	crlRepo, err := crl.NewCRLRepository(db)
+	if err != nil {
+		panic(err)
 	}
 
-	if *verboseFlag {
-		lvl := new(slog.LevelVar)
-		lvl.Set(slog.LevelDebug)
-
-		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: lvl,
-		}))
-
-		slog.SetDefault(logger)
+	sessRepo, err := session.NewSessionRepository(db)
+	if err != nil {
+		panic(err)
 	}
 
-	if *daemonFlag {
-		tuns := tuns.New(storage)
-		agents := agents.New(storage)
-		proxyController := proxy.New(cfg, storage)
+	operRepo, err := operator.NewOperatorRepository(db)
+	if err != nil {
+		panic(err)
+	}
 
-		go proxyController.ListenAndServe()
-		go agents.WaitForConnections(cfg, &proxyController, tuns)
+	assetRepo, err := asset.NewAssetRepository(db)
+	if err != nil {
+		panic(err)
+	}
 
-		tuns.Restore()
+	crlService := crl.NewCRLService(crlRepo)
+	certService := certificate.NewCertificateService(certRepo, crlService)
+	sessService := session.NewSessionService(cfg, sessRepo)
+	operService := operator.NewOperatorService(cfg, operRepo, certService)
+	assetService := asset.NewAssetsService(cfg, assetRepo)
 
-		rpc.Run(cfg, storage, tuns, agents)
+	if err := assetService.Init(); err != nil {
+		panic(err)
+	}
+
+	if err := certService.Init(); err != nil {
+		panic(err)
+	}
+
+	if err := sessService.Init(); err != nil {
+		panic(err)
+	}
+
+	if err := operService.Init(); err != nil {
+		panic(err)
+	}
+
+	app := tui.NewApp(operService)
+
+	if !*daemon {
+		logHandler = slog.New(logger.NewLogHandler(app.Logs, loggingOpts))
+		slog.SetDefault(logHandler)
+	}
+
+	quit := make(chan error)
+	go func() {
+		quit <- agents.Run(cfg, certService, sessService)
+	}()
+	go func() {
+		quit <- rpc.Run(cfg, certService, sessService, operService, assetService)
+	}()
+
+	if *daemon {
+		<-quit
 	} else {
-		cli.Run(cfg, storage)
+		app.Run()
 	}
 }

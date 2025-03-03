@@ -3,39 +3,70 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
+	"os"
 
-	"github.com/ttpreport/ligolo-mp/cmd/client/cli"
-	"github.com/ttpreport/ligolo-mp/internal/common/config"
-	"github.com/ttpreport/ligolo-mp/internal/common/operator"
-	"github.com/ttpreport/ligolo-mp/internal/core/storage"
+	"github.com/ttpreport/ligolo-mp/cmd/client/tui"
+	"github.com/ttpreport/ligolo-mp/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/internal/config"
+	"github.com/ttpreport/ligolo-mp/internal/crl"
+	"github.com/ttpreport/ligolo-mp/internal/operator"
+	"github.com/ttpreport/ligolo-mp/internal/storage"
+	"github.com/ttpreport/ligolo-mp/pkg/logger"
 )
 
 func main() {
-	var credsFile = flag.String("import", "", "Path to credentials file to import")
+	var verbose = flag.Bool("v", false, "enable verbose mode")
 
 	flag.Parse()
 
-	storage, err := storage.New(config.GetRootAppDir("client"))
+	loggingOpts := &slog.HandlerOptions{}
+	if *verbose {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelDebug)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	} else {
+		lvl := new(slog.LevelVar)
+		lvl.Set(slog.LevelInfo)
+		loggingOpts = &slog.HandlerOptions{
+			Level: lvl,
+		}
+	}
+	logHandler := slog.New(slog.NewTextHandler(os.Stdout, loggingOpts))
+	slog.SetDefault(logHandler)
+
+	cfg := &config.Config{
+		Environment: "client",
+	}
+
+	storage, err := storage.New(cfg.GetRootAppDir())
 	if err != nil {
 		panic(fmt.Sprintf("could not connect to storage: %v", err))
 	}
 
-	if err = storage.InitClient(); err != nil {
+	operRepo, err := operator.NewOperatorRepository(storage)
+	if err != nil {
 		panic(err)
 	}
 
-	if *credsFile == "" {
-		cli.Run(storage)
-	} else {
-		creds, err := operator.LoadFromFile(*credsFile)
-		if err != nil {
-			panic(err)
-		}
-
-		if err = storage.AddCred(creds.Name, creds.Server, creds.CACert, creds.OperatorCert, creds.OperatorKey); err != nil {
-			panic(err)
-		}
-
-		fmt.Println("Credentials successfully imported!")
+	certRepo, err := certificate.NewCertificateRepository(storage)
+	if err != nil {
+		panic(err)
 	}
+
+	crlRepo, err := crl.NewCRLRepository(storage)
+	if err != nil {
+		panic(err)
+	}
+
+	crlService := crl.NewCRLService(crlRepo)
+	certService := certificate.NewCertificateService(certRepo, crlService)
+	operService := operator.NewOperatorService(cfg, operRepo, certService)
+
+	app := tui.NewApp(operService)
+	logHandler = slog.New(logger.NewLogHandler(app.Logs, loggingOpts))
+	slog.SetDefault(logHandler)
+	app.Run()
 }

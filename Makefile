@@ -1,9 +1,34 @@
-GO_VER = 1.21.4
-BLOAT_FILES = AUTHORS CONTRIBUTORS PATENTS VERSION favicon.ico robots.txt SECURITY.md CONTRIBUTING.md LICENSE README.md ./doc ./test ./api ./misc
-GARBLE_VER = 1.21.4b
+GO_VER := 1.20
+BLOAT_FILES := AUTHORS CONTRIBUTORS PATENTS VERSION favicon.ico robots.txt SECURITY.md CONTRIBUTING.md LICENSE README.md ./doc ./test ./api ./misc
+GARBLE_VER := 0.10.1
 
-.PHONY: all
-all: assets binaries
+GO ?= go
+
+ARCH := $(shell uname -m)
+
+ifeq ($(ARCH),aarch64)
+    ARCH := arm64
+else ifneq (,$(findstring armv5,$(ARCH)))
+    ARCH := armv5
+else ifneq (,$(findstring armv6,$(ARCH)))
+    ARCH := armv6
+else ifneq (,$(findstring armv7,$(ARCH)))
+    ARCH := arm
+else ifeq ($(ARCH),x86_64)
+    ARCH := amd64
+else ifeq ($(ARCH),x86)
+    ARCH := 386
+else ifeq ($(ARCH),i686)
+    ARCH := 386
+else ifeq ($(ARCH),i386)
+    ARCH := 386
+endif
+
+TARGET_ARCH ?= $(ARCH)
+TARGET_OS ?= linux
+
+.PHONY: build
+build: assets binaries
 
 .PHONY: assets
 assets: go agent
@@ -14,33 +39,32 @@ binaries: server client
 .PHONY: go
 go:
 	# Build go
-	cd assets/artifacts && curl -L --output go$(GO_VER).linux-amd64.tar.gz https://dl.google.com/go/go$(GO_VER).linux-amd64.tar.gz
-	cd assets/artifacts && tar xvf go$(GO_VER).linux-amd64.tar.gz
-	cd assets/artifacts/go && rm -rf $(BLOAT_FILES)
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/doc
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/tour
-	rm -f assets/artifacts/go/pkg/tool/linux_amd64/test2json
+	cd artifacts && curl -L --output go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz https://dl.google.com/go/go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
+	cd artifacts && tar xvf go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
+	cd artifacts/go && rm -rf $(BLOAT_FILES)
+	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/doc
+	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/tour
+	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/test2json
 	# Build garble
-	cd assets/artifacts/go/bin && curl -L --output garble https://github.com/moloch--/garble/releases/download/v$(GARBLE_VER)/garble_linux && chmod +x garble
+	cd artifacts/go/bin && curl -L --output garble https://github.com/ttpreport/garble/releases/download/v$(GARBLE_VER)/garble_$(TARGET_OS)_$(TARGET_ARCH) && chmod +x garble
 	# Bundle
-	cd assets/artifacts && zip -r go.zip ./go
+	cd artifacts && zip -r go.zip ./go
 	# Clean up
-	cd assets/artifacts && rm -rf go go$(GO_VER).linux-amd64.tar.gz
+	cd artifacts && rm -rf go go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
 
 .PHONY: agent
 agent:
-	cd assets/agent && go mod tidy
-	cd assets/agent && go mod vendor
-	cd assets/agent && zip -r ../artifacts/agent.zip .
+	cd artifacts/agent && go mod tidy
+	cd artifacts/agent && go mod vendor
+	cd artifacts/agent && zip -r ../agent.zip .
 
 .PHONY: server
 server:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -trimpath -o ligolo-server ./cmd/server/
+	GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) CGO_ENABLED=0 $(GO) build -mod=vendor -trimpath -o ligolo-mp ./cmd/server/
 
 .PHONY: client
 client:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -trimpath -o ligolo-client_linux ./cmd/client/
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -trimpath -o ligolo-client_windows ./cmd/client/
+	GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) CGO_ENABLED=0 $(GO) build -mod=vendor -trimpath -o ligolo-mp-client ./cmd/client/
 
 .PHONY: protobuf
 protobuf:
@@ -48,4 +72,12 @@ protobuf:
 
 .PHONY: clean
 clean:
-	rm -rf assets/artifacts/agent.zip assets/artifacts/go.zip
+	rm -rf artifacts/agent.zip artifacts/go.zip
+
+.PHONY: install
+install:
+	./install_server.sh
+
+.PHONY: service
+service:
+	./install_service.sh
