@@ -20,6 +20,7 @@ case $ARCH in
     i386) ARCH="386";;
 esac
 
+OLDCWD=$(pwd)
 cd /root || exit
 echo "Running from $(pwd)"
 
@@ -59,6 +60,7 @@ else
 fi
 
 echo "Configuring systemd service ..."
+cd $OLDCWD
 ./install_service.sh
 echo
 

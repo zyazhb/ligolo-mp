@@ -2,7 +2,7 @@
 
 if command -v apt-get &> /dev/null; then # Debian-based OS (Debian, Ubuntu, etc)
     echo "Installing dependencies using apt..."
-    DEBIAN_FRONTEND=noninteractive apt-get install -yqq \
+    DEBIAN_FRONTEND=noninteractive apt-get update -yqq && apt-get install -yqq \
         gpg curl build-essential git \
         mingw-w64 binutils-mingw-w64 g++-mingw-w64
         INSTALLER=(apt-get install -yqq)
