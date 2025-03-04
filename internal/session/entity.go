@@ -192,10 +192,6 @@ func (sess *Session) Connect(multiplex *yamux.Session) error {
 }
 
 func (sess *Session) Disconnect() error {
-	if !sess.IsConnected {
-		return errors.New("session is already disconnected")
-	}
-
 	sess.IsConnected = false
 	sess.LastSeen = time.Now()
 
@@ -301,7 +297,7 @@ func (sess *Session) remoteGetInfo() (protocol.InfoReplyPacket, error) {
 
 func (sess *Session) remoteDestroySession() error {
 	if sess.Multiplex == nil || sess.Multiplex.IsClosed() {
-		return fmt.Errorf("multiplex is disconnected")
+		return nil
 	}
 
 	stream, err := sess.Multiplex.Open()
@@ -318,7 +314,7 @@ func (sess *Session) remoteDestroySession() error {
 		return err
 	}
 
-	return stream.Close()
+	return nil
 }
 
 func (sess *Session) remoteCreateRedirector(id string, proto string, from string, to string) error {

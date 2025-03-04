@@ -136,8 +136,7 @@ func (s *ligoloServer) RenameSession(ctx context.Context, in *pb.RenameSessionRe
 func (s *ligoloServer) KillSession(ctx context.Context, in *pb.KillSessionReq) (*pb.Empty, error) {
 	slog.Debug("Received request to kill session", slog.Any("in", in))
 
-	sess := s.sessService.GetSession(in.SessionID)
-	err := s.sessService.KillSession(in.SessionID)
+	sess, err := s.sessService.KillSession(in.SessionID)
 	if err == nil {
 		oper := ctx.Value("operator").(*operator.Operator)
 		events.Publish(events.OK, "%s: session '%s' killed", oper.Name, sess.GetName())

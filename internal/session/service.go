@@ -83,16 +83,15 @@ func (ss *SessionService) DisconnectSession(sessID string) error {
 	return ss.repo.Save(sess)
 }
 
-func (ss *SessionService) KillSession(sessID string) error {
+func (ss *SessionService) KillSession(sessID string) (*Session, error) {
 	sess := ss.GetSession(sessID)
 	if sess == nil {
-		return fmt.Errorf("session '%s' does not exist", sessID)
+		return nil, fmt.Errorf("session '%s' does not exist", sessID)
 	}
 
 	sess.Disconnect()
-	sess.CleanUp()
 
-	return ss.repo.Remove(sess)
+	return sess, ss.repo.Remove(sess)
 }
 
 func (ss *SessionService) RenameSession(id string, alias string) error {
