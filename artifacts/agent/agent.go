@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/url"
 	"os"
@@ -137,7 +138,9 @@ func main() {
 func connect(conn net.Conn, config *tls.Config) error {
 	tlsConn := tls.Client(conn, config)
 
-	yamuxConn, err := yamux.Server(tlsConn, yamux.DefaultConfig())
+	yamuxConf := yamux.DefaultConfig()
+	yamuxConf.LogOutput = io.Discard
+	yamuxConn, err := yamux.Server(tlsConn, yamuxConf)
 	if err != nil {
 		return err
 	}

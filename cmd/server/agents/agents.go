@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"io"
 	"log/slog"
 	"net"
 
@@ -117,7 +118,9 @@ func (aah *AgentApiHandler) startHandler() {
 		remoteConn := <-aah.connections
 		slog.Debug("agent connection received")
 
-		yamuxConn, err := yamux.Client(remoteConn, nil)
+		config := yamux.DefaultConfig()
+		config.LogOutput = io.Discard
+		yamuxConn, err := yamux.Client(remoteConn, config)
 		if err != nil {
 			slog.Error("could not open multiplexed connection with agent")
 			continue
