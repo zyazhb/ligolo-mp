@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
-	"github.com/ttpreport/ligolo-mp/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
 )
 
 type OperatorService struct {

@@ -6,12 +6,12 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	forms "github.com/ttpreport/ligolo-mp/cmd/client/tui/forms"
-	modals "github.com/ttpreport/ligolo-mp/cmd/client/tui/modals"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
-	"github.com/ttpreport/ligolo-mp/internal/operator"
+	forms "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms"
+	modals "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/modals"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/style"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/utils"
+	widgets "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/v2/internal/operator"
 )
 
 type CredentialsPage struct {

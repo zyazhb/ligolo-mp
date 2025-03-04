@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 )
 
 type Certificate struct {

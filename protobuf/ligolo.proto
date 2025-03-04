@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/ttpreport/ligolo-mp/protobuf";
+option go_package = "github.com/ttpreport/ligolo-mp/v2/protobuf";
 
 package ligolo;
 

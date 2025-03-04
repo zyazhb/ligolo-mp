@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/hashicorp/yamux"
-	"github.com/ttpreport/ligolo-mp/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
 )
 
 type SessionService struct {

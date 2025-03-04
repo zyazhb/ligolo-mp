@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/utils"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 )
 
 type Route struct {

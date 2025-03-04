@@ -6,17 +6,17 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui"
-	"github.com/ttpreport/ligolo-mp/cmd/server/agents"
-	"github.com/ttpreport/ligolo-mp/cmd/server/rpc"
-	"github.com/ttpreport/ligolo-mp/internal/asset"
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/crl"
-	"github.com/ttpreport/ligolo-mp/internal/operator"
-	"github.com/ttpreport/ligolo-mp/internal/session"
-	"github.com/ttpreport/ligolo-mp/internal/storage"
-	"github.com/ttpreport/ligolo-mp/pkg/logger"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/server/agents"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/server/rpc"
+	"github.com/ttpreport/ligolo-mp/v2/internal/asset"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/crl"
+	"github.com/ttpreport/ligolo-mp/v2/internal/operator"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
+	"github.com/ttpreport/ligolo-mp/v2/internal/storage"
+	"github.com/ttpreport/ligolo-mp/v2/pkg/logger"
 )
 
 func main() {

@@ -10,16 +10,16 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	modals "github.com/ttpreport/ligolo-mp/cmd/client/tui/modals"
-	pages "github.com/ttpreport/ligolo-mp/cmd/client/tui/pages"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/events"
-	"github.com/ttpreport/ligolo-mp/internal/operator"
-	"github.com/ttpreport/ligolo-mp/internal/session"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	modals "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/modals"
+	pages "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/pages"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/utils"
+	widgets "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/events"
+	"github.com/ttpreport/ligolo-mp/v2/internal/operator"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 )
 
 type App struct {

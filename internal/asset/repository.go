@@ -1,6 +1,6 @@
 package asset
 
-import "github.com/ttpreport/ligolo-mp/internal/storage"
+import "github.com/ttpreport/ligolo-mp/v2/internal/storage"
 
 type AssetRepository struct {
 	storage *storage.StoreInstance[Asset]

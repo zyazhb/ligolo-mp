@@ -6,7 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 )
 
 type Config struct {

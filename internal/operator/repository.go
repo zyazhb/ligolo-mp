@@ -1,7 +1,7 @@
 package operator
 
 import (
-	"github.com/ttpreport/ligolo-mp/internal/storage"
+	"github.com/ttpreport/ligolo-mp/v2/internal/storage"
 )
 
 type OperatorRepository struct {

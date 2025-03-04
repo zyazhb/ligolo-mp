@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/rivo/tview"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	"github.com/ttpreport/ligolo-mp/internal/protocol"
-	"github.com/ttpreport/ligolo-mp/internal/session"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/style"
+	"github.com/ttpreport/ligolo-mp/v2/internal/protocol"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
 )
 
 type InterfacesWidget struct {

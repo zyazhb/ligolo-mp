@@ -6,8 +6,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	"github.com/ttpreport/ligolo-mp/internal/session"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/style"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
 )
 
 type RedirectorsWidget struct {

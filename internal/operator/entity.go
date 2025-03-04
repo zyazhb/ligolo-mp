@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/utils"
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/utils"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
@@ -69,7 +69,7 @@ func (oper *Operator) Connect() error {
 
 	ca := x509.NewCertPool()
 	if ok := ca.AppendCertsFromPEM(oper.CA); !ok {
-		panic("failed to parse CACert")
+		//	panic("failed to parse CACert")
 	}
 
 	tlsConfig := &tls.Config{

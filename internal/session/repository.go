@@ -1,8 +1,8 @@
 package session
 
 import (
-	"github.com/ttpreport/ligolo-mp/internal/storage"
-	"github.com/ttpreport/ligolo-mp/pkg/memstore"
+	"github.com/ttpreport/ligolo-mp/v2/internal/storage"
+	"github.com/ttpreport/ligolo-mp/v2/pkg/memstore"
 )
 
 type SessionRepository struct {

@@ -3,7 +3,7 @@ package protocol
 import (
 	"net"
 
-	"github.com/ttpreport/ligolo-mp/internal/relay"
+	"github.com/ttpreport/ligolo-mp/v2/internal/relay"
 )
 
 // Envelope is the structure used when Encoding/Decode ligolo packets

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/rivo/tview"
-	"github.com/ttpreport/ligolo-mp/cmd/client/tui/style"
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/style"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
 )
 
 type CertificatesWidget struct {

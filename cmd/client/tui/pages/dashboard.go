@@ -5,12 +5,12 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	forms "github.com/ttpreport/ligolo-mp/cmd/client/tui/forms"
-	modals "github.com/ttpreport/ligolo-mp/cmd/client/tui/modals"
-	widgets "github.com/ttpreport/ligolo-mp/cmd/client/tui/widgets"
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/operator"
-	"github.com/ttpreport/ligolo-mp/internal/session"
+	forms "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms"
+	modals "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/modals"
+	widgets "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/widgets"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/operator"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
 )
 
 type DashboardPage struct {

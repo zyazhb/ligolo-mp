@@ -9,10 +9,10 @@ import (
 	"net"
 
 	"github.com/hashicorp/yamux"
-	"github.com/ttpreport/ligolo-mp/internal/certificate"
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/events"
-	"github.com/ttpreport/ligolo-mp/internal/session"
+	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/events"
+	"github.com/ttpreport/ligolo-mp/v2/internal/session"
 )
 
 type AgentApiHandler struct {

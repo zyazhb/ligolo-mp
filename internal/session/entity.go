@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/yamux"
-	"github.com/ttpreport/ligolo-mp/internal/protocol"
-	"github.com/ttpreport/ligolo-mp/internal/tun"
-	"github.com/ttpreport/ligolo-mp/pkg/memstore"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/v2/internal/protocol"
+	"github.com/ttpreport/ligolo-mp/v2/internal/tun"
+	"github.com/ttpreport/ligolo-mp/v2/pkg/memstore"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

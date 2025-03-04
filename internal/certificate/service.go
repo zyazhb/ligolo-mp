@@ -14,7 +14,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/ttpreport/ligolo-mp/internal/crl"
+	"github.com/ttpreport/ligolo-mp/v2/internal/crl"
 )
 
 type CertificateService struct {

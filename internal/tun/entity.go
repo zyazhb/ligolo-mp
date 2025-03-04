@@ -6,11 +6,11 @@ import (
 	"net"
 
 	"github.com/hashicorp/yamux"
-	"github.com/ttpreport/ligolo-mp/internal/netstack"
-	"github.com/ttpreport/ligolo-mp/internal/netstack/tunlink"
-	"github.com/ttpreport/ligolo-mp/internal/route"
-	"github.com/ttpreport/ligolo-mp/pkg/memstore"
-	pb "github.com/ttpreport/ligolo-mp/protobuf"
+	"github.com/ttpreport/ligolo-mp/v2/internal/netstack"
+	"github.com/ttpreport/ligolo-mp/v2/internal/netstack/tunlink"
+	"github.com/ttpreport/ligolo-mp/v2/internal/route"
+	"github.com/ttpreport/ligolo-mp/v2/pkg/memstore"
+	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
 )
 
 type Tun struct {

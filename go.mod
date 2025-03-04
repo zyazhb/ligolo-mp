@@ -1,11 +1,10 @@
-module github.com/ttpreport/ligolo-mp
+module github.com/ttpreport/ligolo-mp/v2
 
 go 1.23.5
 
 replace github.com/ttpreport/ligolo-mp => ./
 
 require (
-	github.com/go-ping/ping v1.2.0
 	github.com/hashicorp/yamux v0.1.2
 	golang.org/x/net v0.35.0 // indirect
 )
@@ -34,7 +33,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f // indirect
-	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/term v0.29.0 // indirect
 	golang.org/x/text v0.22.0 // indirect

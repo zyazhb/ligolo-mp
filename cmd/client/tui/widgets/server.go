@@ -6,8 +6,8 @@ import (
 
 	"github.com/rivo/tview"
 
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/operator"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/operator"
 )
 
 type ServerWidget struct {

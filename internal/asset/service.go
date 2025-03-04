@@ -15,9 +15,9 @@ import (
 	"text/template"
 
 	"github.com/rs/xid"
-	"github.com/ttpreport/ligolo-mp/artifacts"
-	"github.com/ttpreport/ligolo-mp/internal/config"
-	"github.com/ttpreport/ligolo-mp/internal/gogo"
+	"github.com/ttpreport/ligolo-mp/v2/artifacts"
+	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/gogo"
 )
 
 type AssetService struct {
