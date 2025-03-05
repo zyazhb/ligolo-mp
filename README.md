@@ -2,7 +2,7 @@
 
 ![Ligolo-MP Logo](doc/logo.png)
 
-[![Release](https://github.com/ttpreport/ligolo-mp/v2/actions/workflows/release.yml/badge.svg)](https://github.com/ttpreport/ligolo-mp/v2/actions/workflows/release.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/ttpreport/ligolo-mp)](https://goreportcard.com/report/github.com/ttpreport/ligolo-mp) [![GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Release](https://github.com/ttpreport/ligolo-mp/actions/workflows/release.yml/badge.svg)](https://github.com/ttpreport/ligolo-mp/actions/workflows/release.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/ttpreport/ligolo-mp)](https://goreportcard.com/report/github.com/ttpreport/ligolo-mp) [![GPLv3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 **Ligolo-MP** is an advanced version of Ligolo-ng, with client-server architecture, enabling pentesters to play with multiple concurrent tunnels collaboratively. It manages all your TUNs automatically, while also providing a clean GUI to track everything.
 
@@ -22,4 +22,4 @@
 
 ## Documentation
 
-Please visit the [Wiki](https://github.com/ttpreport/ligolo-mp/v2/wiki) for up-to-date information
+Please visit the [Wiki](https://github.com/ttpreport/ligolo-mp/wiki) for up-to-date information
