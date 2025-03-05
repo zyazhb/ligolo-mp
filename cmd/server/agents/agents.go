@@ -94,6 +94,13 @@ func (aah *AgentApiHandler) serve(protocol string, listenIface string, tlsConfig
 		slog.Any("address", listenIface),
 	)
 
+	err = aah.sessionService.CleanUp()
+	if err != nil {
+		slog.Error("Could not clean up sessions",
+			slog.Any("error", err),
+		)
+	}
+
 	go aah.startHandler()
 
 	for {

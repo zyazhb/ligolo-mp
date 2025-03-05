@@ -215,6 +215,10 @@ func (ss *SessionService) RouteOverlaps(cidr string) (*Session, string) {
 }
 
 func (ss *SessionService) Init() error {
+	return nil
+}
+
+func (ss *SessionService) CleanUp() error {
 	sessions, err := ss.repo.GetAll()
 	if err != nil {
 		return err

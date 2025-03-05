@@ -193,9 +193,13 @@ func (sess *Session) Connect(multiplex *yamux.Session) error {
 
 func (sess *Session) Disconnect() error {
 	sess.IsConnected = false
-	sess.LastSeen = time.Now()
 
-	return sess.remoteDestroySession()
+	err := sess.remoteDestroySession()
+	if err == nil {
+		sess.LastSeen = time.Now()
+	}
+
+	return err
 }
 
 func (sess *Session) StartRelay(maxConnections int, maxInFlight int) error {
@@ -264,8 +268,16 @@ func (sess *Session) CleanUp() {
 	sess.Tun.Stop()
 }
 
-func (sess *Session) remoteGetInfo() (protocol.InfoReplyPacket, error) {
+func (sess *Session) IsMultiplexOpen() bool {
 	if sess.Multiplex == nil || sess.Multiplex.IsClosed() {
+		return false
+	}
+
+	return true
+}
+
+func (sess *Session) remoteGetInfo() (protocol.InfoReplyPacket, error) {
+	if !sess.IsMultiplexOpen() {
 		return protocol.InfoReplyPacket{}, fmt.Errorf("multiplex is disconnected")
 	}
 
@@ -296,7 +308,7 @@ func (sess *Session) remoteGetInfo() (protocol.InfoReplyPacket, error) {
 }
 
 func (sess *Session) remoteDestroySession() error {
-	if sess.Multiplex == nil || sess.Multiplex.IsClosed() {
+	if !sess.IsMultiplexOpen() {
 		return nil
 	}
 
@@ -318,7 +330,7 @@ func (sess *Session) remoteDestroySession() error {
 }
 
 func (sess *Session) remoteCreateRedirector(id string, proto string, from string, to string) error {
-	if sess.Multiplex == nil || sess.Multiplex.IsClosed() {
+	if !sess.IsMultiplexOpen() {
 		return fmt.Errorf("multiplex is disconnected")
 	}
 
@@ -358,7 +370,7 @@ func (sess *Session) remoteCreateRedirector(id string, proto string, from string
 }
 
 func (sess *Session) remoteRemoveRedirector(id string) error {
-	if sess.Multiplex == nil || sess.Multiplex.IsClosed() {
+	if !sess.IsMultiplexOpen() {
 		return fmt.Errorf("multiplex is disconnected")
 	}
 
