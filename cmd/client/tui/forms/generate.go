@@ -123,7 +123,7 @@ func NewGenerateForm() *GenerateForm {
 	goarchField.SetFocusFunc(func() {
 		hintBox.SetText(generate_goarch.Hint)
 	})
-	goarchField.SetOptions([]string{"amd64", "x86", "arm64", "arm"}, func(option string, index int) {
+	goarchField.SetOptions([]string{"amd64", "386", "arm64", "arm"}, func(option string, index int) {
 		generate_goarch.Last.ID = index
 		generate_goarch.Last.Value = option
 	})
