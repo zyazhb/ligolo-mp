@@ -57,7 +57,7 @@ func NewAddRedirectorForm() *AddRedirectorForm {
 	page.form.AddFormItem(fromField)
 
 	toField := tview.NewInputField()
-	toField.SetLabel("From")
+	toField.SetLabel("To")
 	toField.SetText(redirector_to.Last)
 	toField.SetFocusFunc(func() {
 		hintBox.SetText(redirector_to.Hint)
