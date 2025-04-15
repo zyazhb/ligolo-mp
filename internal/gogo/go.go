@@ -3,6 +3,7 @@ package gogo
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -89,6 +90,8 @@ func GarbleCmd(config GoConfig, cwd string, command []string) ([]byte, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
+	slog.Debug("Running garble command", slog.Any("cmd", cmd), slog.Any("env", cmd.Env))
+
 	err := cmd.Run()
 
 	return stdout.Bytes(), err
@@ -113,6 +116,8 @@ func GoCmd(config GoConfig, cwd string, command []string) ([]byte, error) {
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+
+	slog.Debug("Running go command", slog.Any("cmd", cmd), slog.Any("env", cmd.Env))
 
 	err := cmd.Run()
 
@@ -149,7 +154,10 @@ func GoMod(config GoConfig, src string, args []string) ([]byte, error) {
 // GoVersion - Execute a go version command, returns stdout/error
 func GoVersion(config GoConfig) ([]byte, error) {
 	var goCommand = []string{"version"}
-	wd, _ := os.Getwd()
+	wd, err := os.Getwd()
+	if err != nil {
+		slog.Error("Go version failed", slog.Any("error", err))
+	}
 	return GoCmd(config, wd, goCommand)
 }
 
@@ -169,6 +177,7 @@ func GoToolDistList(config GoConfig) []string {
 	data, err := GoCmd(config, wd, goCommand)
 
 	if err != nil {
+		slog.Error("Golang tool dist list failed", slog.Any("error", err))
 		return nil
 	}
 	lines := strings.Split(string(data), "\n")
