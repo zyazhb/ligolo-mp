@@ -182,16 +182,50 @@ func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Ad
 
 	sess := s.sessService.GetSession(in.SessionID)
 	err := s.sessService.NewRoute(in.SessionID, in.Route.Cidr, in.Route.IsLoopback)
-	if err == nil {
-		oper := ctx.Value("operator").(*operator.Operator)
-		if in.Route.IsLoopback {
-			events.Publish(events.OK, "%s: loopback route '%s' added to '%s'", oper.Name, in.Route.Cidr, sess.GetName())
-		} else {
-			events.Publish(events.OK, "%s: regular route '%s' added to '%s'", oper.Name, in.Route.Cidr, sess.GetName())
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return &pb.AddRouteResp{}, err
+	routeType := "regular"
+	if in.Route.IsLoopback {
+		routeType = "loopback"
+	}
+
+	oper := ctx.Value("operator").(*operator.Operator)
+	events.Publish(events.OK, "%s: %s route '%s' added to '%s'", oper.Name, routeType, in.Route.Cidr, sess.GetName())
+
+	return &pb.AddRouteResp{}, nil
+}
+
+func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.Empty, error) {
+	slog.Debug("Received request to edit route", slog.Any("in", in))
+
+	err := s.sessService.RemoveRoute(in.SessionID, in.OldRoute.Cidr)
+	if err != nil {
+		return &pb.Empty{}, err
+	}
+
+	err = s.sessService.NewRoute(in.SessionID, in.NewRoute.Cidr, in.NewRoute.IsLoopback)
+	if err != nil {
+		s.sessService.NewRoute(in.SessionID, in.OldRoute.Cidr, in.OldRoute.IsLoopback)
+		return &pb.Empty{}, err
+	}
+
+	oldRouteType := "regular"
+	if in.OldRoute.IsLoopback {
+		oldRouteType = "loopback"
+	}
+
+	newRouteType := "regular"
+	if in.NewRoute.IsLoopback {
+		newRouteType = "loopback"
+	}
+
+	oper := ctx.Value("operator").(*operator.Operator)
+	sess := s.sessService.GetSession(in.SessionID)
+	events.Publish(events.OK, "%s: %s route '%s' on '%s' changed to %s route '%s'", oper.Name, oldRouteType, in.OldRoute.Cidr, newRouteType, in.NewRoute.Cidr, sess.GetName())
+
+	return &pb.Empty{}, nil
 }
 
 func (s *ligoloServer) DelRoute(ctx context.Context, in *pb.DelRouteReq) (*pb.Empty, error) {
