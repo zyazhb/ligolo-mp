@@ -151,14 +151,15 @@ message AddRouteReq {
   bool Force = 3;
 }
 
-message AddRouteResp {
-  Session OverlappingSession = 1;
-}
-
 message EditRouteReq {
   string SessionID = 1;
-  Route OldRoute = 2;
-  Route NewRoute = 3;
+  string RouteID = 2;
+  string Cidr = 3;
+  bool isLoopback = 4;
+}
+
+message AddRouteResp {
+  Session OverlappingSession = 1;
 }
 
 message DelRouteReq {

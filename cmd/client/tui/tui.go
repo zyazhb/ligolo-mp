@@ -250,6 +250,18 @@ func (app *App) initDashboard() {
 		return err
 	})
 
+	app.dashboard.SetSessionEditRouteFunc(func(sess *session.Session, routeID string, cidr string, loopback bool) error {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+		_, err := app.operator.Client().EditRoute(ctx, &pb.EditRouteReq{
+			SessionID:  sess.ID,
+			RouteID:    routeID,
+			Cidr:       cidr,
+			IsLoopback: loopback,
+		})
+		return err
+	})
+
 	app.dashboard.SetSessionRemoveRouteFunc(func(sess *session.Session, routeID string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()

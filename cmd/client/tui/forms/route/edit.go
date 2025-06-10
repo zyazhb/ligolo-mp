@@ -1,28 +1,33 @@
-package forms
+package route
 
 import (
 	"github.com/rivo/tview"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms"
+	"github.com/ttpreport/ligolo-mp/v2/internal/route"
 )
 
-var (
-	route_cidr = FormVal[string]{
-		Hint: "A CIDR that will be routed via this session.\n\nExample:\n10.10.5.0/24",
-	}
-
-	route_loopback = FormVal[bool]{
-		Hint: "If checked, specified CIDR will address the machine running the agent itself, i.e. localhost. Use this instead of port forwarding.",
-	}
-)
-
-type AddRouteForm struct {
+type EditRouteForm struct {
 	tview.Flex
 	form      *tview.Form
 	submitBtn *tview.Button
 	cancelBtn *tview.Button
 }
 
-func NewAddRouteForm() *AddRouteForm {
-	form := &AddRouteForm{
+var (
+	edit_route_cidr = forms.FormVal[string]{
+		Hint: "A CIDR that will be routed via this session.\n\nExample:\n10.10.5.0/24",
+	}
+
+	edit_route_loopback = forms.FormVal[bool]{
+		Hint: "If checked, specified CIDR will address the machine running the agent itself, i.e. localhost. Use this instead of port forwarding.",
+	}
+)
+
+func NewEditRouteForm(route *route.Route) *EditRouteForm {
+	edit_route_cidr.Last = route.Cidr.String()
+	edit_route_loopback.Last = route.IsLoopback
+
+	form := &EditRouteForm{
 		Flex:      *tview.NewFlex(),
 		form:      tview.NewForm(),
 		submitBtn: tview.NewButton("Submit"),
@@ -41,23 +46,23 @@ func NewAddRouteForm() *AddRouteForm {
 
 	cidrField := tview.NewInputField()
 	cidrField.SetLabel("CIDR")
-	cidrField.SetText(route_cidr.Last)
+	cidrField.SetText(edit_route_cidr.Last)
 	cidrField.SetFocusFunc(func() {
-		hintBox.SetText(route_cidr.Hint)
+		hintBox.SetText(edit_route_cidr.Hint)
 	})
 	cidrField.SetChangedFunc(func(text string) {
-		route_cidr.Last = text
+		edit_route_cidr.Last = text
 	})
 	form.form.AddFormItem(cidrField)
 
 	loopbackField := tview.NewCheckbox()
 	loopbackField.SetLabel("Loopback")
-	loopbackField.SetChecked(route_loopback.Last)
+	loopbackField.SetChecked(edit_route_loopback.Last)
 	loopbackField.SetFocusFunc(func() {
-		hintBox.SetText(route_loopback.Hint)
+		hintBox.SetText(edit_route_loopback.Hint)
 	})
 	loopbackField.SetChangedFunc(func(checked bool) {
-		route_loopback.Last = checked
+		edit_route_loopback.Last = checked
 	})
 	loopbackField.SetBlurFunc(func() {
 		hintBox.Clear()
@@ -82,20 +87,20 @@ func NewAddRouteForm() *AddRouteForm {
 	return form
 }
 
-func (page *AddRouteForm) GetID() string {
-	return "addroute_page"
+func (form *EditRouteForm) GetID() string {
+	return "editroute_form"
 }
 
-func (page *AddRouteForm) SetSubmitFunc(f func(string, bool)) {
-	btnId := page.form.GetButtonIndex("Submit")
-	submitBtn := page.form.GetButton(btnId)
+func (form *EditRouteForm) SetSubmitFunc(f func(string, bool)) {
+	btnId := form.form.GetButtonIndex("Submit")
+	submitBtn := form.form.GetButton(btnId)
 	submitBtn.SetSelectedFunc(func() {
-		f(route_cidr.Last, route_loopback.Last)
+		f(edit_route_cidr.Last, edit_route_loopback.Last)
 	})
 }
 
-func (page *AddRouteForm) SetCancelFunc(f func()) {
-	btnId := page.form.GetButtonIndex("Cancel")
-	submitBtn := page.form.GetButton(btnId)
+func (form *EditRouteForm) SetCancelFunc(f func()) {
+	btnId := form.form.GetButtonIndex("Cancel")
+	submitBtn := form.form.GetButton(btnId)
 	submitBtn.SetSelectedFunc(f)
 }

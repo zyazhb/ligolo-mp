@@ -5,7 +5,8 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	forms "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms"
+	"github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms"
+	route_forms "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/forms/route"
 	modals "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/modals"
 	widgets "github.com/ttpreport/ligolo-mp/v2/cmd/client/tui/widgets"
 	"github.com/ttpreport/ligolo-mp/v2/internal/config"
@@ -32,13 +33,13 @@ type DashboardPage struct {
 	sessionStopFunc             func(*session.Session) error
 	sessionRenameFunc           func(*session.Session, string) error
 	sessionAddRouteFunc         func(*session.Session, string, bool) error
+	sessionEditRouteFunc        func(*session.Session, string, string, bool) error
 	sessionRemoveRouteFunc      func(*session.Session, string) error
 	sessionAddRedirectorFunc    func(*session.Session, string, string, string) error
 	sessionRemoveRedirectorFunc func(*session.Session, string) error
 	sessionRemoveFunc           func(*session.Session) error
 
-	operator          *operator.Operator
-	selectedSelection *session.Session
+	operator *operator.Operator
 }
 
 func NewDashboardPage() *DashboardPage {
@@ -148,7 +149,7 @@ func (dash *DashboardPage) initSessionsWidget() {
 		}))
 
 		menu.AddItem(modals.NewMenuModalElem("Add route", func() {
-			route := forms.NewAddRouteForm()
+			route := route_forms.NewAddRouteForm()
 			route.SetSubmitFunc(func(cidr string, loopback bool) {
 				dash.DoWithLoader("Adding route...", func() {
 					err := dash.sessionAddRouteFunc(sess, cidr, loopback)
@@ -228,15 +229,39 @@ func (dash *DashboardPage) initRoutesWidget() {
 			dash.setFocus(dash.routes)
 		}
 
-		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
-			dash.DoWithLoader("Removing route...", func() {
-				err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.ID.String())
-				if err != nil {
-					dash.ShowError(fmt.Sprintf("Could not remove route: %s", err), cleanup)
-					return
-				}
+		menu.AddItem(modals.NewMenuModalElem("Edit", func() {
+			routeEdit := route_forms.NewEditRouteForm(elem.Route)
+			routeEdit.SetSubmitFunc(func(cidr string, loopback bool) {
+				dash.DoWithLoader("Editing route...", func() {
+					err := dash.sessionEditRouteFunc(elem.Session, elem.Route.ID.String(), cidr, loopback)
+					if err != nil {
+						dash.RemovePage(routeEdit.GetID())
+						dash.ShowError(fmt.Sprintf("Could not edit route: %s", err), cleanup)
+						return
+					}
 
-				dash.ShowInfo("Route removed", cleanup)
+					dash.RemovePage(routeEdit.GetID())
+					dash.ShowInfo("Route edited", cleanup)
+				})
+			})
+			routeEdit.SetCancelFunc(func() {
+				dash.RemovePage(routeEdit.GetID())
+				cleanup()
+			})
+			dash.AddPage(routeEdit.GetID(), routeEdit, true, true)
+		}))
+
+		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
+			dash.DoWithConfirm("Are you sure?", func() {
+				dash.DoWithLoader("Removing route...", func() {
+					err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.ID.String())
+					if err != nil {
+						dash.ShowError(fmt.Sprintf("Could not remove route: %s", err), cleanup)
+						return
+					}
+
+					dash.ShowInfo("Route removed", cleanup)
+				})
 			})
 		}))
 
@@ -384,6 +409,10 @@ func (dash *DashboardPage) SetSessionRenameFunc(f func(*session.Session, string)
 
 func (dash *DashboardPage) SetSessionAddRouteFunc(f func(*session.Session, string, bool) error) {
 	dash.sessionAddRouteFunc = f
+}
+
+func (dash *DashboardPage) SetSessionEditRouteFunc(f func(*session.Session, string, string, bool) error) {
+	dash.sessionEditRouteFunc = f
 }
 
 func (dash *DashboardPage) SetSessionRemoveRouteFunc(f func(*session.Session, string) error) {
