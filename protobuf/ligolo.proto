@@ -75,8 +75,9 @@ message Interface {
 }
 
 message Route {
-  string Cidr = 1;
-	bool IsLoopback = 2;
+  string ID = 1;
+  string Cidr = 2;
+	bool IsLoopback = 3;
 }
 
 message Redirector {
@@ -162,7 +163,7 @@ message EditRouteReq {
 
 message DelRouteReq {
   string SessionID = 1;
-  string Cidr = 2;
+  string RouteID = 2;
 }
 
 message GenerateAgentReq {

@@ -230,7 +230,7 @@ func (dash *DashboardPage) initRoutesWidget() {
 
 		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
 			dash.DoWithLoader("Removing route...", func() {
-				err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.Cidr.String())
+				err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.ID.String())
 				if err != nil {
 					dash.ShowError(fmt.Sprintf("Could not remove route: %s", err), cleanup)
 					return

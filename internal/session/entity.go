@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/protocol"
+	"github.com/ttpreport/ligolo-mp/v2/internal/route"
 	"github.com/ttpreport/ligolo-mp/v2/internal/tun"
 	"github.com/ttpreport/ligolo-mp/v2/pkg/memstore"
 	pb "github.com/ttpreport/ligolo-mp/v2/protobuf"
@@ -121,16 +122,19 @@ func (sess *Session) NewRoute(cidr string, isLoopback bool) error {
 	return nil
 }
 
-func (sess *Session) RemoveRoute(cidr string) error {
-	if err := sess.Tun.RemoveRoute(cidr); err != nil {
-		return err
+func (sess *Session) RemoveRoute(id string) (*route.Route, error) {
+	route, err := sess.Tun.RemoveRoute(id)
+	if err != nil {
+		return nil, err
 	}
 
 	if sess.IsRelaying {
-		return sess.Tun.ApplyRoutes()
+		if err := sess.Tun.ApplyRoutes(); err != nil {
+			return nil, err
+		}
 	}
 
-	return nil
+	return route, nil
 }
 
 func (sess *Session) Copy(source *Session) {

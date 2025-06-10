@@ -250,12 +250,12 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionRemoveRouteFunc(func(sess *session.Session, cidr string) error {
+	app.dashboard.SetSessionRemoveRouteFunc(func(sess *session.Session, routeID string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().DelRoute(ctx, &pb.DelRouteReq{
 			SessionID: sess.ID,
-			Cidr:      cidr,
+			RouteID:   routeID,
 		})
 		return err
 	})

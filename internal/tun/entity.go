@@ -3,7 +3,6 @@ package tun
 import (
 	"fmt"
 	"log/slog"
-	"net"
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/netstack"
@@ -125,39 +124,36 @@ func (t *Tun) removeAllRoutes() error {
 func (t *Tun) NewRoute(cidr string, isLoopback bool) error {
 	slog.Debug("adding route to tun", slog.Any("route", cidr))
 
-	_, dst, err := net.ParseCIDR(cidr)
+	route, err := route.NewRoute(cidr, isLoopback)
 	if err != nil {
-		return err
+		return nil
 	}
 
-	t.Routes.Set(dst.String(), &route.Route{
-		Cidr:       dst,
-		IsLoopback: isLoopback,
-	})
+	t.Routes.Set(route.ID.String(), route)
 
 	slog.Debug("route added to tun")
 
 	return nil
 }
 
-func (t *Tun) RemoveRoute(cidr string) error {
-	slog.Debug("removing route from tun", slog.Any("route", cidr))
-
-	_, dst, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return err
+func (t *Tun) RemoveRoute(id string) (*route.Route, error) {
+	route := t.Routes.Get(id)
+	if route == nil {
+		return nil, fmt.Errorf("route not found")
 	}
 
-	t.Routes.Delete(dst.String())
+	slog.Debug("removing route from tun", slog.Any("route", route))
+
+	t.Routes.Delete(id)
 
 	if err := t.ApplyRoutes(); err != nil {
 		slog.Error("could not apply routes", slog.Any("tun", t), slog.Any("routes", t.Routes.All()))
-		return err
+		return nil, err
 	}
 
-	slog.Debug("route removed", slog.Any("routes", cidr))
+	slog.Debug("route removed", slog.Any("route", route))
 
-	return nil
+	return route, nil
 }
 
 func (t *Tun) GetName() (string, error) {

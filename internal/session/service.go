@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/route"
 )
 
 type SessionService struct {
@@ -121,18 +122,19 @@ func (ss *SessionService) NewRoute(sessionID string, cidr string, isLoopback boo
 	return ss.repo.Save(session)
 }
 
-func (ss *SessionService) RemoveRoute(sessionID string, cidr string) error {
+func (ss *SessionService) RemoveRoute(sessionID string, routeID string) (*route.Route, error) {
 	slog.Debug("removing route from session")
 	session := ss.repo.GetOne(sessionID)
 	if session == nil {
-		return fmt.Errorf("session '%s' not found", sessionID)
+		return nil, fmt.Errorf("session '%s' not found", sessionID)
 	}
 
-	if err := session.RemoveRoute(cidr); err != nil {
-		return err
+	route, err := session.RemoveRoute(routeID)
+	if err != nil {
+		return nil, err
 	}
 
-	return ss.repo.Save(session)
+	return route, ss.repo.Save(session)
 }
 
 func (ss *SessionService) StartRelay(sessID string) error {

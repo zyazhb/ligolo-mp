@@ -200,7 +200,7 @@ func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Ad
 func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.Empty, error) {
 	slog.Debug("Received request to edit route", slog.Any("in", in))
 
-	err := s.sessService.RemoveRoute(in.SessionID, in.OldRoute.Cidr)
+	_, err := s.sessService.RemoveRoute(in.SessionID, in.OldRoute.ID)
 	if err != nil {
 		return &pb.Empty{}, err
 	}
@@ -232,10 +232,10 @@ func (s *ligoloServer) DelRoute(ctx context.Context, in *pb.DelRouteReq) (*pb.Em
 	slog.Debug("Received request to delete route", slog.Any("in", in))
 
 	sess := s.sessService.GetSession(in.SessionID)
-	err := s.sessService.RemoveRoute(in.SessionID, in.Cidr)
+	route, err := s.sessService.RemoveRoute(in.SessionID, in.RouteID)
 	if err == nil {
 		oper := ctx.Value("operator").(*operator.Operator)
-		events.Publish(events.OK, "%s: route '%s' removed from '%s'", oper.Name, in.Cidr, sess.GetName())
+		events.Publish(events.OK, "%s: route '%s' removed from '%s'", oper.Name, route.Cidr, sess.GetName())
 	}
 
 	return &pb.Empty{}, err
