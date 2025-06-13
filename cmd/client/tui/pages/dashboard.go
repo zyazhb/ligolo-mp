@@ -25,7 +25,9 @@ type DashboardPage struct {
 	routes      *widgets.RoutesWidget
 	redirectors *widgets.RedirectorsWidget
 
-	getData                     func() ([]*session.Session, error)
+	data []*session.Session
+
+	fetchData                   func() ([]*session.Session, error)
 	getMetadata                 func() (*config.Config, *operator.Operator, error)
 	adminFunc                   func()
 	generateFunc                func(path string, servers string, goos string, goarch string, obfuscate bool, proxy string, ignoreEnvProxy bool) (string, error)
@@ -34,6 +36,7 @@ type DashboardPage struct {
 	sessionRenameFunc           func(*session.Session, string) error
 	sessionAddRouteFunc         func(*session.Session, string, bool) error
 	sessionEditRouteFunc        func(*session.Session, string, string, bool) error
+	sessionMoveRouteFunc        func(*session.Session, string, string) error
 	sessionRemoveRouteFunc      func(*session.Session, string) error
 	sessionAddRedirectorFunc    func(*session.Session, string, string, string) error
 	sessionRemoveRedirectorFunc func(*session.Session, string) error
@@ -251,6 +254,29 @@ func (dash *DashboardPage) initRoutesWidget() {
 			dash.AddPage(routeEdit.GetID(), routeEdit, true, true)
 		}))
 
+		menu.AddItem(modals.NewMenuModalElem("Move", func() {
+			sessions := dash.GetData()
+			routeMove := route_forms.NewMoveRouteForm(sessions)
+			routeMove.SetSubmitFunc(func(targetSessionID string) {
+				dash.DoWithLoader("Moving route...", func() {
+					err := dash.sessionMoveRouteFunc(elem.Session, elem.Route.ID.String(), targetSessionID)
+					if err != nil {
+						dash.RemovePage(routeMove.GetID())
+						dash.ShowError(fmt.Sprintf("Could not move route: %s", err), cleanup)
+						return
+					}
+
+					dash.RemovePage(routeMove.GetID())
+					dash.ShowInfo("Route moved", cleanup)
+				})
+			})
+			routeMove.SetCancelFunc(func() {
+				dash.RemovePage(routeMove.GetID())
+				cleanup()
+			})
+			dash.AddPage(routeMove.GetID(), routeMove, true, true)
+		}))
+
 		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
 			dash.DoWithConfirm("Are you sure?", func() {
 				dash.DoWithLoader("Removing route...", func() {
@@ -384,7 +410,7 @@ func (dash *DashboardPage) SetAdminFunc(f func()) {
 }
 
 func (dash *DashboardPage) SetDataFunc(f func() ([]*session.Session, error)) {
-	dash.getData = f
+	dash.fetchData = f
 }
 
 func (dash *DashboardPage) SetMetadataFunc(f func() (*config.Config, *operator.Operator, error)) {
@@ -415,6 +441,10 @@ func (dash *DashboardPage) SetSessionEditRouteFunc(f func(*session.Session, stri
 	dash.sessionEditRouteFunc = f
 }
 
+func (dash *DashboardPage) SetSessionMoveRouteFunc(f func(*session.Session, string, string) error) {
+	dash.sessionMoveRouteFunc = f
+}
+
 func (dash *DashboardPage) SetSessionRemoveRouteFunc(f func(*session.Session, string) error) {
 	dash.sessionRemoveRouteFunc = f
 }
@@ -432,12 +462,13 @@ func (dash *DashboardPage) SetSessionKillFunc(f func(*session.Session) error) {
 }
 
 func (dash *DashboardPage) RefreshData() {
-	data, err := dash.getData()
+	data, err := dash.fetchData()
 	if err != nil {
 		dash.ShowError(fmt.Sprintf("Could not fetch data: %s", err), nil)
 		return
 	}
 
+	dash.data = data
 	dash.sessions.SetData(data)
 	dash.interfaces.SetData(data)
 	dash.routes.SetData(data)
@@ -450,6 +481,10 @@ func (dash *DashboardPage) RefreshData() {
 	}
 
 	dash.server.SetData(config, operator)
+}
+
+func (dash *DashboardPage) GetData() []*session.Session {
+	return dash.data
 }
 
 func (dash *DashboardPage) GetNavBar() []widgets.NavBarElem {

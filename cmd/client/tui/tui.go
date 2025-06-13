@@ -262,6 +262,17 @@ func (app *App) initDashboard() {
 		return err
 	})
 
+	app.dashboard.SetSessionMoveRouteFunc(func(sess *session.Session, routeID string, targetSessionID string) error {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+		_, err := app.operator.Client().MoveRoute(ctx, &pb.MoveRouteReq{
+			OldSessionID: sess.ID,
+			RouteID:      routeID,
+			NewSessionID: targetSessionID,
+		})
+		return err
+	})
+
 	app.dashboard.SetSessionRemoveRouteFunc(func(sess *session.Session, routeID string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()

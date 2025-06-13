@@ -223,7 +223,34 @@ func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.
 
 	oper := ctx.Value("operator").(*operator.Operator)
 	sess := s.sessService.GetSession(in.SessionID)
-	events.Publish(events.OK, "%s: %s route '%s' on '%s' changed to %s route '%s'", oper.Name, oldRouteType, oldRoute.Cidr.String(), newRouteType, in.Cidr, sess.GetName())
+	events.Publish(events.OK, "%s: %s route '%s' on '%s' changed to %s route '%s'", oper.Name, oldRouteType, oldRoute.Cidr.String(), sess.GetName(), newRouteType, in.Cidr)
+
+	return &pb.Empty{}, nil
+}
+
+func (s *ligoloServer) MoveRoute(ctx context.Context, in *pb.MoveRouteReq) (*pb.Empty, error) {
+	slog.Debug("Received request to move route", slog.Any("in", in))
+
+	oldRoute, err := s.sessService.RemoveRoute(in.OldSessionID, in.RouteID)
+	if err != nil {
+		return &pb.Empty{}, err
+	}
+
+	err = s.sessService.NewRoute(in.NewSessionID, oldRoute.Cidr.String(), oldRoute.IsLoopback)
+	if err != nil {
+		s.sessService.NewRoute(in.OldSessionID, oldRoute.Cidr.String(), oldRoute.IsLoopback)
+		return &pb.Empty{}, err
+	}
+
+	routeType := "regular"
+	if oldRoute.IsLoopback {
+		routeType = "loopback"
+	}
+
+	oper := ctx.Value("operator").(*operator.Operator)
+	oldSess := s.sessService.GetSession(in.OldSessionID)
+	newSess := s.sessService.GetSession(in.NewSessionID)
+	events.Publish(events.OK, "%s: %s route '%s' on '%s' moved to '%s'", oper.Name, routeType, oldRoute.Cidr.String(), oldSess.GetName(), newSess.GetName())
 
 	return &pb.Empty{}, nil
 }

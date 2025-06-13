@@ -28,6 +28,7 @@ const (
 	Ligolo_StopRelay_FullMethodName       = "/ligolo.Ligolo/StopRelay"
 	Ligolo_AddRoute_FullMethodName        = "/ligolo.Ligolo/AddRoute"
 	Ligolo_EditRoute_FullMethodName       = "/ligolo.Ligolo/EditRoute"
+	Ligolo_MoveRoute_FullMethodName       = "/ligolo.Ligolo/MoveRoute"
 	Ligolo_DelRoute_FullMethodName        = "/ligolo.Ligolo/DelRoute"
 	Ligolo_AddRedirector_FullMethodName   = "/ligolo.Ligolo/AddRedirector"
 	Ligolo_DelRedirector_FullMethodName   = "/ligolo.Ligolo/DelRedirector"
@@ -55,6 +56,7 @@ type LigoloClient interface {
 	StopRelay(ctx context.Context, in *StopRelayReq, opts ...grpc.CallOption) (*Empty, error)
 	AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*AddRouteResp, error)
 	EditRoute(ctx context.Context, in *EditRouteReq, opts ...grpc.CallOption) (*Empty, error)
+	MoveRoute(ctx context.Context, in *MoveRouteReq, opts ...grpc.CallOption) (*Empty, error)
 	DelRoute(ctx context.Context, in *DelRouteReq, opts ...grpc.CallOption) (*Empty, error)
 	AddRedirector(ctx context.Context, in *AddRedirectorReq, opts ...grpc.CallOption) (*Empty, error)
 	DelRedirector(ctx context.Context, in *DelRedirectorReq, opts ...grpc.CallOption) (*Empty, error)
@@ -175,6 +177,15 @@ func (c *ligoloClient) AddRoute(ctx context.Context, in *AddRouteReq, opts ...gr
 func (c *ligoloClient) EditRoute(ctx context.Context, in *EditRouteReq, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, Ligolo_EditRoute_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ligoloClient) MoveRoute(ctx context.Context, in *MoveRouteReq, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, Ligolo_MoveRoute_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +313,7 @@ type LigoloServer interface {
 	StopRelay(context.Context, *StopRelayReq) (*Empty, error)
 	AddRoute(context.Context, *AddRouteReq) (*AddRouteResp, error)
 	EditRoute(context.Context, *EditRouteReq) (*Empty, error)
+	MoveRoute(context.Context, *MoveRouteReq) (*Empty, error)
 	DelRoute(context.Context, *DelRouteReq) (*Empty, error)
 	AddRedirector(context.Context, *AddRedirectorReq) (*Empty, error)
 	DelRedirector(context.Context, *DelRedirectorReq) (*Empty, error)
@@ -347,6 +359,9 @@ func (UnimplementedLigoloServer) AddRoute(context.Context, *AddRouteReq) (*AddRo
 }
 func (UnimplementedLigoloServer) EditRoute(context.Context, *EditRouteReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditRoute not implemented")
+}
+func (UnimplementedLigoloServer) MoveRoute(context.Context, *MoveRouteReq) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MoveRoute not implemented")
 }
 func (UnimplementedLigoloServer) DelRoute(context.Context, *DelRouteReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelRoute not implemented")
@@ -558,6 +573,24 @@ func _Ligolo_EditRoute_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LigoloServer).EditRoute(ctx, req.(*EditRouteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Ligolo_MoveRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MoveRouteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LigoloServer).MoveRoute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Ligolo_MoveRoute_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LigoloServer).MoveRoute(ctx, req.(*MoveRouteReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -816,6 +849,10 @@ var Ligolo_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EditRoute",
 			Handler:    _Ligolo_EditRoute_Handler,
+		},
+		{
+			MethodName: "MoveRoute",
+			Handler:    _Ligolo_MoveRoute_Handler,
 		},
 		{
 			MethodName: "DelRoute",

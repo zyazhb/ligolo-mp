@@ -19,6 +19,7 @@ service Ligolo {
   
   rpc AddRoute (AddRouteReq) returns (AddRouteResp) {}
   rpc EditRoute (EditRouteReq) returns (Empty) {}
+  rpc MoveRoute (MoveRouteReq) returns (Empty) {}
   rpc DelRoute (DelRouteReq) returns (Empty) {}
 
   rpc AddRedirector (AddRedirectorReq) returns (Empty) {}
@@ -156,6 +157,12 @@ message EditRouteReq {
   string RouteID = 2;
   string Cidr = 3;
   bool isLoopback = 4;
+}
+
+message MoveRouteReq {
+  string OldSessionID = 1;
+  string RouteID = 2;
+  string NewSessionID = 3;
 }
 
 message AddRouteResp {
