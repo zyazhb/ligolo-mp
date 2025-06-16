@@ -62,8 +62,8 @@ func NewDashboardPage() *DashboardPage {
 
 	firstRow := tview.NewFlex()
 	firstRow.SetDirection(tview.FlexColumn)
-	firstRow.AddItem(dash.sessions, 0, 75, true)
-	firstRow.AddItem(dash.interfaces, 0, 25, false)
+	firstRow.AddItem(dash.sessions, 0, 65, true)
+	firstRow.AddItem(dash.interfaces, 0, 35, false)
 
 	secondRow := tview.NewFlex()
 	secondRow.SetDirection(tview.FlexColumn)
