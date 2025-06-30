@@ -49,3 +49,19 @@ func ProtoToRoute(p *pb.Route) *Route {
 		IsLoopback: p.IsLoopback,
 	}
 }
+
+type Trace struct {
+	IsInternal bool
+	Session    string
+	Iface      string
+	Via        string
+}
+
+func (t *Trace) Proto() *pb.Traceroute {
+	return &pb.Traceroute{
+		IsInternal: t.IsInternal,
+		Session:    t.Session,
+		Iface:      t.Iface,
+		Via:        t.Via,
+	}
+}

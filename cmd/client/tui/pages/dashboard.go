@@ -2,6 +2,7 @@ package pages
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -41,6 +42,7 @@ type DashboardPage struct {
 	sessionAddRedirectorFunc    func(*session.Session, string, string, string) error
 	sessionRemoveRedirectorFunc func(*session.Session, string) error
 	sessionRemoveFunc           func(*session.Session) error
+	tracerouteFunc              func(string) ([]string, error)
 
 	operator *operator.Operator
 }
@@ -373,6 +375,24 @@ func (dash *DashboardPage) InputHandler() func(event *tcell.EventKey, setFocus f
 					dash.RemovePage(gen.GetID())
 				})
 				dash.AddPage(gen.GetID(), gen, true, true)
+			case tcell.KeyCtrlT:
+				trace := forms.NewTracerouteForm()
+				trace.SetSubmitFunc(func(address string) {
+					dash.DoWithLoader("Tracing route...", func() {
+						routes, err := dash.tracerouteFunc(address)
+						if err != nil {
+							dash.ShowError(fmt.Sprintf("Could not trace route: %s", err), nil)
+							return
+						}
+
+						dash.RemovePage(trace.GetID())
+						dash.ShowText(fmt.Sprintf("Tracing %s", address), strings.Join(routes, "\n"), nil)
+					})
+				})
+				trace.SetCancelFunc(func() {
+					dash.RemovePage(trace.GetID())
+				})
+				dash.AddPage(trace.GetID(), trace, true, true)
 			default:
 				defaultHandler := dash.flex.InputHandler()
 				defaultHandler(event, setFocus)
@@ -461,6 +481,10 @@ func (dash *DashboardPage) SetSessionKillFunc(f func(*session.Session) error) {
 	dash.sessionRemoveFunc = f
 }
 
+func (dash *DashboardPage) SetTracerouteFunc(f func(string) ([]string, error)) {
+	dash.tracerouteFunc = f
+}
+
 func (dash *DashboardPage) RefreshData() {
 	data, err := dash.fetchData()
 	if err != nil {
@@ -490,6 +514,7 @@ func (dash *DashboardPage) GetData() []*session.Session {
 func (dash *DashboardPage) GetNavBar() []widgets.NavBarElem {
 	navbar := []widgets.NavBarElem{
 		widgets.NewNavBarElem(tcell.KeyCtrlN, "Generate"),
+		widgets.NewNavBarElem(tcell.KeyCtrlT, "Traceroute"),
 		widgets.NewNavBarElem(tcell.KeyTab, "Switch pane"),
 	}
 
@@ -548,6 +573,14 @@ func (dash *DashboardPage) ShowInfo(text string, done func()) {
 		if done != nil {
 			done()
 		}
+	})
+	dash.AddPage(modal.GetID(), modal, true, true)
+}
+
+func (dash *DashboardPage) ShowText(title string, text string, done func()) {
+	modal := modals.NewTextModal(title, text)
+	modal.SetDoneFunc(func() {
+		dash.RemovePage(modal.GetID())
 	})
 	dash.AddPage(modal.GetID(), modal, true, true)
 }

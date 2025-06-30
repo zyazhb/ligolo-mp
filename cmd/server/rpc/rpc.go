@@ -324,6 +324,24 @@ func (s *ligoloServer) GenerateAgent(ctx context.Context, in *pb.GenerateAgentRe
 	return &pb.GenerateAgentResp{AgentBinary: result}, nil
 }
 
+func (s *ligoloServer) Traceroute(ctx context.Context, in *pb.TracerouteReq) (*pb.TracerouteResp, error) {
+	slog.Debug("Received request to trace address", slog.Any("in", in))
+
+	trace, err := s.sessService.Traceroute(in.IP)
+	if err != nil {
+		return nil, err
+	}
+
+	var protoTrace []*pb.Traceroute
+	for _, traceLine := range trace {
+		protoTrace = append(protoTrace, traceLine.Proto())
+	}
+
+	return &pb.TracerouteResp{
+		Trace: protoTrace,
+	}, nil
+}
+
 func (s *ligoloServer) GetOperators(ctx context.Context, in *pb.Empty) (*pb.GetOperatorsResp, error) {
 	slog.Debug("Received request to list operators", slog.Any("in", in))
 	oper := ctx.Value("operator").(*operator.Operator)

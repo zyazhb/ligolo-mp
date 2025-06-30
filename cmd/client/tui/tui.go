@@ -328,6 +328,36 @@ func (app *App) initDashboard() {
 
 		return config, operator, nil
 	})
+
+	app.dashboard.SetTracerouteFunc(func(address string) ([]string, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+		defer cancel()
+
+		r, err := app.operator.Client().Traceroute(ctx, &pb.TracerouteReq{
+			IP: address,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		var trace []string
+		var route string
+		for _, traceline := range r.Trace {
+			if traceline.IsInternal {
+				route = fmt.Sprintf("%s routed via Ligolo-MP (%s)", address, traceline.Session)
+			} else {
+				route = fmt.Sprintf("%s routed externally via %s", address, traceline.Iface)
+
+				if traceline.Via != "" {
+					route += fmt.Sprintf(" (%s)", traceline.Via)
+				}
+			}
+
+			trace = append(trace, route)
+		}
+
+		return trace, nil
+	})
 }
 
 func (app *App) initAdmin() {

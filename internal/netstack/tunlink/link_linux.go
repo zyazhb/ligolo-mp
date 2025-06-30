@@ -75,3 +75,12 @@ func GetName(ID int) (string, error) {
 	}
 	return link.Attrs().Name, nil
 }
+
+func GetRoute(address net.IP) ([]netlink.Route, error) {
+	routes, err := netlink.RouteGet(address)
+	if err != nil {
+		return nil, err
+	}
+
+	return routes, nil
+}

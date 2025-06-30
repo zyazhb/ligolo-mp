@@ -7,8 +7,8 @@ package ligolo;
 import "google/protobuf/timestamp.proto";
 
 service Ligolo {
-  rpc Join(Empty) returns (stream Event) {}
-  rpc GetMetadata(Empty) returns (GetMetadataResp) {}
+  rpc Join (Empty) returns (stream Event) {}
+  rpc GetMetadata (Empty) returns (GetMetadataResp) {}
 
   rpc GetSessions (Empty) returns (GetSessionsResp) {}
   rpc RenameSession (RenameSessionReq) returns (Empty) {}
@@ -36,6 +36,8 @@ service Ligolo {
   rpc DemoteOperator (DemoteOperatorReq) returns (Empty) {}
 
   rpc GenerateAgent (GenerateAgentReq) returns (GenerateAgentResp) {}
+
+  rpc Traceroute (TracerouteReq) returns (TracerouteResp) {}
 }
 
 // [Objects]
@@ -107,6 +109,13 @@ message Operator {
 message Config {
   string OperatorServer = 1;
   string AgentServer = 2;
+}
+
+message Traceroute {
+  bool IsInternal = 1;
+  string Session = 2;
+  string Iface = 3;
+  string Via = 4;
 }
 
 // [/Objects]
@@ -185,6 +194,14 @@ message GenerateAgentReq {
 
 message GenerateAgentResp {
   bytes AgentBinary = 1;
+}
+
+message TracerouteReq {
+  string IP = 1;
+}
+
+message TracerouteResp {
+  repeated Traceroute Trace = 1; 
 }
 
 message GetCertsResp {

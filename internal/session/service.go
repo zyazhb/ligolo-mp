@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/config"
+	"github.com/ttpreport/ligolo-mp/v2/internal/netstack/tunlink"
 	"github.com/ttpreport/ligolo-mp/v2/internal/route"
 )
 
@@ -214,6 +216,58 @@ func (ss *SessionService) RouteOverlaps(cidr string) (*Session, string) {
 	}
 
 	return nil, ""
+}
+
+func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
+	slog.Debug("tracing address")
+	ip := net.ParseIP(address)
+	if ip == nil {
+		return nil, fmt.Errorf("malformed IP address")
+	}
+
+	routes, err := tunlink.GetRoute(ip)
+	if err != nil {
+		return nil, err
+	}
+
+	sessions, err := ss.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	sessionTuns := make(map[string]*Session)
+	for _, session := range sessions {
+		sessionTuns[session.Tun.Name] = session
+	}
+
+	var result []route.Trace
+	for _, linkroute := range routes {
+		iface, err := tunlink.GetName(linkroute.LinkIndex)
+		if err != nil {
+			return nil, err
+		}
+
+		if routingSession, ok := sessionTuns[iface]; ok {
+			result = append(result, route.Trace{
+				IsInternal: true,
+				Session:    routingSession.GetName(),
+				Iface:      iface,
+			})
+		} else {
+			var via string
+			if linkroute.Via != nil {
+				via = linkroute.Via.String()
+			}
+
+			result = append(result, route.Trace{
+				IsInternal: false,
+				Iface:      iface,
+				Via:        via,
+			})
+		}
+	}
+
+	return result, nil
 }
 
 func (ss *SessionService) Init() error {
