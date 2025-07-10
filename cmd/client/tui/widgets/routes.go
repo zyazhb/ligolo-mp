@@ -2,6 +2,8 @@ package widgets
 
 import (
 	"fmt"
+	"net"
+	"sort"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -120,6 +122,8 @@ func (widget *RoutesWidget) Refresh() {
 		widget.SetCell(0, i, tview.NewTableCell(header).SetExpansion(1).SetSelectable(false)).SetFixed(1, 0)
 	}
 
+	sort.Sort(ByRouteOrder(widget.data))
+
 	rowId := 1
 	for _, elem := range widget.data {
 		if elem.IsSelected(widget.selectedSession) {
@@ -198,4 +202,40 @@ func (elem *RoutesWidgetElem) Status() *tview.TableCell {
 	}
 
 	return tview.NewTableCell(val).SetTextColor(tcell.ColorGreen)
+}
+
+type ByRouteOrder []*RoutesWidgetElem
+
+func (sorter ByRouteOrder) Len() int      { return len(sorter) }
+func (sorter ByRouteOrder) Swap(i, j int) { sorter[i], sorter[j] = sorter[j], sorter[i] }
+func (sorter ByRouteOrder) Less(i, j int) bool {
+	// 1. Compare IPs
+	ipCmp := sorter.compareIPs(sorter[i].Route.Cidr.IP, sorter[j].Route.Cidr.IP)
+	if ipCmp != 0 {
+		return ipCmp < 0
+	}
+
+	// 2. Compare prefix lengths (longest first)
+	onesI, _ := sorter[i].Route.Cidr.Mask.Size()
+	onesJ, _ := sorter[j].Route.Cidr.Mask.Size()
+	if onesI != onesJ {
+		return onesI > onesJ
+	}
+
+	// 3. Compare metric (lowest first)
+	return true //sorter[i].Metric < sorter[j].Metric
+}
+
+func (ByRouteOrder) compareIPs(a, b net.IP) int {
+	a = a.To16()
+	b = b.To16()
+	for i := 0; i < len(a); i++ {
+		if a[i] < b[i] {
+			return -1
+		}
+		if a[i] > b[i] {
+			return 1
+		}
+	}
+	return 0
 }
