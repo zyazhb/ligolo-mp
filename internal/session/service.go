@@ -106,7 +106,7 @@ func (ss *SessionService) RenameSession(id string, alias string) error {
 	return ss.repo.Save(session)
 }
 
-func (ss *SessionService) NewRoute(sessionID string, cidr string, isLoopback bool) error {
+func (ss *SessionService) NewRoute(sessionID string, cidr string, metric int, isLoopback bool) error {
 	slog.Debug("adding new route to session")
 
 	session := ss.repo.GetOne(sessionID)
@@ -115,7 +115,7 @@ func (ss *SessionService) NewRoute(sessionID string, cidr string, isLoopback boo
 	}
 	slog.Debug("found session in storage", slog.Any("session", session))
 
-	err := session.NewRoute(cidr, isLoopback)
+	err := session.NewRoute(cidr, metric, isLoopback)
 	if err != nil {
 		return err
 	}
@@ -252,6 +252,7 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 				IsInternal: true,
 				Session:    routingSession.GetName(),
 				Iface:      iface,
+				Metric:     uint(linkroute.Priority),
 			})
 		} else {
 			var via string
@@ -263,6 +264,7 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 				IsInternal: false,
 				Iface:      iface,
 				Via:        via,
+				Metric:     uint(linkroute.Priority),
 			})
 		}
 	}

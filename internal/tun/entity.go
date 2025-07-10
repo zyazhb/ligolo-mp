@@ -3,6 +3,7 @@ package tun
 import (
 	"fmt"
 	"log/slog"
+	"net"
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/netstack"
@@ -101,7 +102,7 @@ func (t *Tun) ApplyRoutes() error {
 		}
 
 		for _, route := range t.Routes.All() {
-			err := tunlink.AddRoute(t.ID, route.Cidr)
+			err := tunlink.AddRoute(t.ID, route.Cidr, route.Metric)
 			if err != nil {
 				slog.Error("could not add route to the system", slog.Any("err", err), slog.Any("route", route))
 			}
@@ -121,15 +122,26 @@ func (t *Tun) removeAllRoutes() error {
 	return nil
 }
 
-func (t *Tun) NewRoute(cidr string, isLoopback bool) error {
+func (t *Tun) NewRoute(cidr string, metric int, isLoopback bool) error {
 	slog.Debug("adding route to tun", slog.Any("route", cidr))
 
-	route, err := route.NewRoute(cidr, isLoopback)
+	_, newRoute, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return err
+	}
+
+	for _, existingRoute := range t.Routes.All() {
+		if existingRoute.Cidr.String() == newRoute.String() {
+			return fmt.Errorf("route already exists within this session")
+		}
+	}
+
+	route, err := route.NewRoute(cidr, metric, isLoopback)
 	if err != nil {
 		return nil
 	}
 
-	t.Routes.Set(route.ID.String(), route)
+	t.Routes.Set(route.ID, route)
 
 	slog.Debug("route added to tun")
 

@@ -10,33 +10,36 @@ import (
 )
 
 type Route struct {
-	ID         uuid.UUID
+	ID         string
 	Cidr       *net.IPNet
 	IsLoopback bool
+	Metric     int
 }
 
-func NewRoute(cidr string, isLoopback bool) (*Route, error) {
+func NewRoute(cidr string, metric int, isLoopback bool) (*Route, error) {
 	_, dst, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Route{
-		ID:         uuid.New(),
+		ID:         uuid.New().String(),
 		Cidr:       dst,
 		IsLoopback: isLoopback,
+		Metric:     metric,
 	}, nil
 }
 
 func (route *Route) String() string {
-	return fmt.Sprintf("ID=%s, CIDR=%s IsLoopback=%s", route.ID.String(), route.Cidr.String(), utils.HumanBool(route.IsLoopback))
+	return fmt.Sprintf("CIDR=%s, IsLoopback=%s, Metric=%d", route.Cidr.String(), utils.HumanBool(route.IsLoopback), route.Metric)
 }
 
 func (route *Route) Proto() *pb.Route {
 	return &pb.Route{
-		ID:         route.ID.String(),
+		ID:         route.ID,
 		Cidr:       route.Cidr.String(),
 		IsLoopback: route.IsLoopback,
+		Metric:     int32(route.Metric),
 	}
 }
 
@@ -44,9 +47,10 @@ func ProtoToRoute(p *pb.Route) *Route {
 	_, cidr, _ := net.ParseCIDR(p.Cidr)
 
 	return &Route{
-		ID:         uuid.MustParse(p.ID),
+		ID:         p.ID,
 		Cidr:       cidr,
 		IsLoopback: p.IsLoopback,
+		Metric:     int(p.Metric),
 	}
 }
 
@@ -55,6 +59,7 @@ type Trace struct {
 	Session    string
 	Iface      string
 	Via        string
+	Metric     uint
 }
 
 func (t *Trace) Proto() *pb.Traceroute {
@@ -63,5 +68,6 @@ func (t *Trace) Proto() *pb.Traceroute {
 		Session:    t.Session,
 		Iface:      t.Iface,
 		Via:        t.Via,
+		Metric:     int32(t.Metric),
 	}
 }

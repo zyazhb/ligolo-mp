@@ -35,8 +35,8 @@ type DashboardPage struct {
 	sessionStartFunc            func(*session.Session) error
 	sessionStopFunc             func(*session.Session) error
 	sessionRenameFunc           func(*session.Session, string) error
-	sessionAddRouteFunc         func(*session.Session, string, bool) error
-	sessionEditRouteFunc        func(*session.Session, string, string, bool) error
+	sessionAddRouteFunc         func(*session.Session, string, int, bool) error
+	sessionEditRouteFunc        func(*session.Session, string, string, int, bool) error
 	sessionMoveRouteFunc        func(*session.Session, string, string) error
 	sessionRemoveRouteFunc      func(*session.Session, string) error
 	sessionAddRedirectorFunc    func(*session.Session, string, string, string) error
@@ -155,9 +155,9 @@ func (dash *DashboardPage) initSessionsWidget() {
 
 		menu.AddItem(modals.NewMenuModalElem("Add route", func() {
 			route := route_forms.NewAddRouteForm()
-			route.SetSubmitFunc(func(cidr string, loopback bool) {
+			route.SetSubmitFunc(func(cidr string, metric int, loopback bool) {
 				dash.DoWithLoader("Adding route...", func() {
-					err := dash.sessionAddRouteFunc(sess, cidr, loopback)
+					err := dash.sessionAddRouteFunc(sess, cidr, metric, loopback)
 					if err != nil {
 						dash.RemovePage(route.GetID())
 						dash.ShowError(fmt.Sprintf("Could not add route: %s", err), cleanup)
@@ -236,9 +236,9 @@ func (dash *DashboardPage) initRoutesWidget() {
 
 		menu.AddItem(modals.NewMenuModalElem("Edit", func() {
 			routeEdit := route_forms.NewEditRouteForm(elem.Route)
-			routeEdit.SetSubmitFunc(func(cidr string, loopback bool) {
+			routeEdit.SetSubmitFunc(func(cidr string, metric int, loopback bool) {
 				dash.DoWithLoader("Editing route...", func() {
-					err := dash.sessionEditRouteFunc(elem.Session, elem.Route.ID.String(), cidr, loopback)
+					err := dash.sessionEditRouteFunc(elem.Session, elem.Route.ID, cidr, metric, loopback)
 					if err != nil {
 						dash.RemovePage(routeEdit.GetID())
 						dash.ShowError(fmt.Sprintf("Could not edit route: %s", err), cleanup)
@@ -261,7 +261,7 @@ func (dash *DashboardPage) initRoutesWidget() {
 			routeMove := route_forms.NewMoveRouteForm(sessions)
 			routeMove.SetSubmitFunc(func(targetSessionID string) {
 				dash.DoWithLoader("Moving route...", func() {
-					err := dash.sessionMoveRouteFunc(elem.Session, elem.Route.ID.String(), targetSessionID)
+					err := dash.sessionMoveRouteFunc(elem.Session, elem.Route.ID, targetSessionID)
 					if err != nil {
 						dash.RemovePage(routeMove.GetID())
 						dash.ShowError(fmt.Sprintf("Could not move route: %s", err), cleanup)
@@ -282,7 +282,7 @@ func (dash *DashboardPage) initRoutesWidget() {
 		menu.AddItem(modals.NewMenuModalElem("Remove", func() {
 			dash.DoWithConfirm("Are you sure?", func() {
 				dash.DoWithLoader("Removing route...", func() {
-					err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.ID.String())
+					err := dash.sessionRemoveRouteFunc(elem.Session, elem.Route.ID)
 					if err != nil {
 						dash.ShowError(fmt.Sprintf("Could not remove route: %s", err), cleanup)
 						return
@@ -453,11 +453,11 @@ func (dash *DashboardPage) SetSessionRenameFunc(f func(*session.Session, string)
 	dash.sessionRenameFunc = f
 }
 
-func (dash *DashboardPage) SetSessionAddRouteFunc(f func(*session.Session, string, bool) error) {
+func (dash *DashboardPage) SetSessionAddRouteFunc(f func(*session.Session, string, int, bool) error) {
 	dash.sessionAddRouteFunc = f
 }
 
-func (dash *DashboardPage) SetSessionEditRouteFunc(f func(*session.Session, string, string, bool) error) {
+func (dash *DashboardPage) SetSessionEditRouteFunc(f func(*session.Session, string, string, int, bool) error) {
 	dash.sessionEditRouteFunc = f
 }
 

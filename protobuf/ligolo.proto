@@ -81,6 +81,7 @@ message Route {
   string ID = 1;
   string Cidr = 2;
 	bool IsLoopback = 3;
+  int32 Metric = 4;
 }
 
 message Redirector {
@@ -116,6 +117,7 @@ message Traceroute {
   string Session = 2;
   string Iface = 3;
   string Via = 4;
+  int32 Metric = 5;
 }
 
 // [/Objects]
@@ -163,8 +165,7 @@ message AddRouteReq {
 message EditRouteReq {
   string SessionID = 1;
   string RouteID = 2;
-  string Cidr = 3;
-  bool isLoopback = 4;
+  Route Route = 3;
 }
 
 message MoveRouteReq {

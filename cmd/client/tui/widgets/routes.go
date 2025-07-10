@@ -116,7 +116,7 @@ func (widget *RoutesWidget) ResetSelector() {
 }
 
 func (widget *RoutesWidget) Refresh() {
-	headers := []string{"Session", "Route", "Loopback", ""}
+	headers := []string{"Session", "Route", "Loopback", "Priority", ""}
 	for i := 0; i < len(headers); i++ {
 		header := fmt.Sprintf("[::b]%s", strings.ToUpper(headers[i]))
 		widget.SetCell(0, i, tview.NewTableCell(header).SetExpansion(1).SetSelectable(false)).SetFixed(1, 0)
@@ -135,7 +135,8 @@ func (widget *RoutesWidget) Refresh() {
 		widget.SetCell(rowId, 0, elem.Name())
 		widget.SetCell(rowId, 1, elem.Cidr())
 		widget.SetCell(rowId, 2, elem.IsLoopback())
-		widget.SetCell(rowId, 3, elem.Status().SetSelectable(false).SetAlign(tview.AlignCenter))
+		widget.SetCell(rowId, 3, elem.Priority())
+		widget.SetCell(rowId, 4, elem.Status().SetSelectable(false).SetAlign(tview.AlignCenter))
 
 		rowId++
 
@@ -204,6 +205,11 @@ func (elem *RoutesWidgetElem) Status() *tview.TableCell {
 	return tview.NewTableCell(val).SetTextColor(tcell.ColorGreen)
 }
 
+func (elem *RoutesWidgetElem) Priority() *tview.TableCell {
+	val := fmt.Sprintf("%d", elem.Route.Metric)
+	return tview.NewTableCell(val).SetBackgroundColor(elem.bgcolor)
+}
+
 type ByRouteOrder []*RoutesWidgetElem
 
 func (sorter ByRouteOrder) Len() int      { return len(sorter) }
@@ -220,9 +226,9 @@ func (sorter ByRouteOrder) Less(i, j int) bool {
 		return onesI > onesJ
 	}
 
-	// if sorter[i].Metric != sorter[j].Metric {
-	// 	return sorter[i].Metric < sorter[j].Metric
-	// }
+	if sorter[i].Route.Metric != sorter[j].Route.Metric {
+		return sorter[i].Route.Metric < sorter[j].Route.Metric
+	}
 
 	return sorter[i].Session.ID > sorter[j].Session.ID
 }

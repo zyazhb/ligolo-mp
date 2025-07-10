@@ -175,7 +175,7 @@ func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Em
 	slog.Debug("Received request to create route", slog.Any("in", in))
 
 	sess := s.sessService.GetSession(in.SessionID)
-	err := s.sessService.NewRoute(in.SessionID, in.Route.Cidr, in.Route.IsLoopback)
+	err := s.sessService.NewRoute(in.SessionID, in.Route.Cidr, int(in.Route.Metric), in.Route.IsLoopback)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Em
 	}
 
 	oper := ctx.Value("operator").(*operator.Operator)
-	events.Publish(events.OK, "%s: %s route '%s' added to '%s'", oper.Name, routeType, in.Route.Cidr, sess.GetName())
+	events.Publish(events.OK, "%s: %s route '%s' with metric '%d' added to '%s'", oper.Name, routeType, in.Route.Cidr, in.Route.Metric, sess.GetName())
 
 	return &pb.Empty{}, nil
 }
@@ -199,9 +199,9 @@ func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.
 		return &pb.Empty{}, err
 	}
 
-	err = s.sessService.NewRoute(in.SessionID, in.Cidr, in.IsLoopback)
+	err = s.sessService.NewRoute(in.SessionID, in.Route.Cidr, int(in.Route.Metric), in.Route.IsLoopback)
 	if err != nil {
-		s.sessService.NewRoute(in.SessionID, oldRoute.Cidr.String(), oldRoute.IsLoopback)
+		s.sessService.NewRoute(in.SessionID, oldRoute.Cidr.String(), int(oldRoute.Metric), oldRoute.IsLoopback)
 		return &pb.Empty{}, err
 	}
 
@@ -211,13 +211,13 @@ func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.
 	}
 
 	newRouteType := "regular"
-	if in.IsLoopback {
+	if in.Route.IsLoopback {
 		newRouteType = "loopback"
 	}
 
 	oper := ctx.Value("operator").(*operator.Operator)
 	sess := s.sessService.GetSession(in.SessionID)
-	events.Publish(events.OK, "%s: %s route '%s' on '%s' changed to %s route '%s'", oper.Name, oldRouteType, oldRoute.Cidr.String(), sess.GetName(), newRouteType, in.Cidr)
+	events.Publish(events.OK, "%s: %s route '%s' on '%s' changed to %s route '%s' with metric '%d'", oper.Name, oldRouteType, oldRoute.Cidr.String(), sess.GetName(), newRouteType, in.Route.Cidr, in.Route.Metric)
 
 	return &pb.Empty{}, nil
 }
@@ -230,9 +230,9 @@ func (s *ligoloServer) MoveRoute(ctx context.Context, in *pb.MoveRouteReq) (*pb.
 		return &pb.Empty{}, err
 	}
 
-	err = s.sessService.NewRoute(in.NewSessionID, oldRoute.Cidr.String(), oldRoute.IsLoopback)
+	err = s.sessService.NewRoute(in.NewSessionID, oldRoute.Cidr.String(), oldRoute.Metric, oldRoute.IsLoopback)
 	if err != nil {
-		s.sessService.NewRoute(in.OldSessionID, oldRoute.Cidr.String(), oldRoute.IsLoopback)
+		s.sessService.NewRoute(in.OldSessionID, oldRoute.Cidr.String(), oldRoute.Metric, oldRoute.IsLoopback)
 		return &pb.Empty{}, err
 	}
 

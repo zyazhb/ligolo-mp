@@ -38,10 +38,11 @@ func Remove(ID int) error {
 	return nil
 }
 
-func AddRoute(ID int, CIDR *net.IPNet) error {
+func AddRoute(ID int, CIDR *net.IPNet, metric int) error {
 	route := &netlink.Route{
 		LinkIndex: ID,
 		Dst:       CIDR,
+		Priority:  metric,
 	}
 	if err := netlink.RouteAdd(route); err != nil {
 		return err

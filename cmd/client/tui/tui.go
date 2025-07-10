@@ -236,7 +236,7 @@ func (app *App) initDashboard() {
 		return err
 	})
 
-	app.dashboard.SetSessionAddRouteFunc(func(sess *session.Session, cidr string, loopback bool) error {
+	app.dashboard.SetSessionAddRouteFunc(func(sess *session.Session, cidr string, metric int, loopback bool) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 
@@ -244,20 +244,24 @@ func (app *App) initDashboard() {
 			SessionID: sess.ID,
 			Route: &pb.Route{
 				Cidr:       cidr,
+				Metric:     int32(metric),
 				IsLoopback: loopback,
 			},
 		})
 		return err
 	})
 
-	app.dashboard.SetSessionEditRouteFunc(func(sess *session.Session, routeID string, cidr string, loopback bool) error {
+	app.dashboard.SetSessionEditRouteFunc(func(sess *session.Session, routeID string, cidr string, metric int, loopback bool) error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 		defer cancel()
 		_, err := app.operator.Client().EditRoute(ctx, &pb.EditRouteReq{
-			SessionID:  sess.ID,
-			RouteID:    routeID,
-			Cidr:       cidr,
-			IsLoopback: loopback,
+			SessionID: sess.ID,
+			RouteID:   routeID,
+			Route: &pb.Route{
+				Cidr:       cidr,
+				Metric:     int32(metric),
+				IsLoopback: loopback,
+			},
 		})
 		return err
 	})

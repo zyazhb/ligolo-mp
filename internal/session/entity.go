@@ -110,8 +110,8 @@ func (sess *Session) RouteOverlaps(cidr string) (string, bool) {
 	return "", false
 }
 
-func (sess *Session) NewRoute(cidr string, isLoopback bool) error {
-	if err := sess.Tun.NewRoute(cidr, isLoopback); err != nil {
+func (sess *Session) NewRoute(cidr string, metric int, isLoopback bool) error {
+	if err := sess.Tun.NewRoute(cidr, metric, isLoopback); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func (sess *Session) Copy(source *Session) {
 	sess.FirstSeen = source.FirstSeen
 
 	for _, route := range source.Tun.GetRoutes() {
-		if err := sess.NewRoute(route.Cidr.String(), route.IsLoopback); err != nil {
+		if err := sess.NewRoute(route.Cidr.String(), route.Metric, route.IsLoopback); err != nil {
 			slog.Error("could not create new route", slog.Any("route", route))
 			continue
 		}
