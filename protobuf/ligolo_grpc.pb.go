@@ -55,7 +55,7 @@ type LigoloClient interface {
 	KillSession(ctx context.Context, in *KillSessionReq, opts ...grpc.CallOption) (*Empty, error)
 	StartRelay(ctx context.Context, in *StartRelayReq, opts ...grpc.CallOption) (*Empty, error)
 	StopRelay(ctx context.Context, in *StopRelayReq, opts ...grpc.CallOption) (*Empty, error)
-	AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*AddRouteResp, error)
+	AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*Empty, error)
 	EditRoute(ctx context.Context, in *EditRouteReq, opts ...grpc.CallOption) (*Empty, error)
 	MoveRoute(ctx context.Context, in *MoveRouteReq, opts ...grpc.CallOption) (*Empty, error)
 	DelRoute(ctx context.Context, in *DelRouteReq, opts ...grpc.CallOption) (*Empty, error)
@@ -167,8 +167,8 @@ func (c *ligoloClient) StopRelay(ctx context.Context, in *StopRelayReq, opts ...
 	return out, nil
 }
 
-func (c *ligoloClient) AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*AddRouteResp, error) {
-	out := new(AddRouteResp)
+func (c *ligoloClient) AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, Ligolo_AddRoute_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -322,7 +322,7 @@ type LigoloServer interface {
 	KillSession(context.Context, *KillSessionReq) (*Empty, error)
 	StartRelay(context.Context, *StartRelayReq) (*Empty, error)
 	StopRelay(context.Context, *StopRelayReq) (*Empty, error)
-	AddRoute(context.Context, *AddRouteReq) (*AddRouteResp, error)
+	AddRoute(context.Context, *AddRouteReq) (*Empty, error)
 	EditRoute(context.Context, *EditRouteReq) (*Empty, error)
 	MoveRoute(context.Context, *MoveRouteReq) (*Empty, error)
 	DelRoute(context.Context, *DelRouteReq) (*Empty, error)
@@ -366,7 +366,7 @@ func (UnimplementedLigoloServer) StartRelay(context.Context, *StartRelayReq) (*E
 func (UnimplementedLigoloServer) StopRelay(context.Context, *StopRelayReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StopRelay not implemented")
 }
-func (UnimplementedLigoloServer) AddRoute(context.Context, *AddRouteReq) (*AddRouteResp, error) {
+func (UnimplementedLigoloServer) AddRoute(context.Context, *AddRouteReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRoute not implemented")
 }
 func (UnimplementedLigoloServer) EditRoute(context.Context, *EditRouteReq) (*Empty, error) {

@@ -171,14 +171,8 @@ func (s *ligoloServer) StopRelay(ctx context.Context, in *pb.StopRelayReq) (*pb.
 	return &pb.Empty{}, err
 }
 
-func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.AddRouteResp, error) {
+func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Empty, error) {
 	slog.Debug("Received request to create route", slog.Any("in", in))
-
-	if !in.Force {
-		if overlappingSession, overlappingRoute := s.sessService.RouteOverlaps(in.Route.Cidr); overlappingSession != nil {
-			return nil, fmt.Errorf("route overlaps with route %s in session %s", overlappingRoute, overlappingSession.GetName())
-		}
-	}
 
 	sess := s.sessService.GetSession(in.SessionID)
 	err := s.sessService.NewRoute(in.SessionID, in.Route.Cidr, in.Route.IsLoopback)
@@ -194,7 +188,7 @@ func (s *ligoloServer) AddRoute(ctx context.Context, in *pb.AddRouteReq) (*pb.Ad
 	oper := ctx.Value("operator").(*operator.Operator)
 	events.Publish(events.OK, "%s: %s route '%s' added to '%s'", oper.Name, routeType, in.Route.Cidr, sess.GetName())
 
-	return &pb.AddRouteResp{}, nil
+	return &pb.Empty{}, nil
 }
 
 func (s *ligoloServer) EditRoute(ctx context.Context, in *pb.EditRouteReq) (*pb.Empty, error) {

@@ -209,21 +209,22 @@ type ByRouteOrder []*RoutesWidgetElem
 func (sorter ByRouteOrder) Len() int      { return len(sorter) }
 func (sorter ByRouteOrder) Swap(i, j int) { sorter[i], sorter[j] = sorter[j], sorter[i] }
 func (sorter ByRouteOrder) Less(i, j int) bool {
-	// 1. Compare IPs
 	ipCmp := sorter.compareIPs(sorter[i].Route.Cidr.IP, sorter[j].Route.Cidr.IP)
 	if ipCmp != 0 {
 		return ipCmp < 0
 	}
 
-	// 2. Compare prefix lengths (longest first)
 	onesI, _ := sorter[i].Route.Cidr.Mask.Size()
 	onesJ, _ := sorter[j].Route.Cidr.Mask.Size()
 	if onesI != onesJ {
 		return onesI > onesJ
 	}
 
-	// 3. Compare metric (lowest first)
-	return true //sorter[i].Metric < sorter[j].Metric
+	// if sorter[i].Metric != sorter[j].Metric {
+	// 	return sorter[i].Metric < sorter[j].Metric
+	// }
+
+	return sorter[i].Session.ID > sorter[j].Session.ID
 }
 
 func (ByRouteOrder) compareIPs(a, b net.IP) int {

@@ -17,7 +17,7 @@ service Ligolo {
   rpc StartRelay (StartRelayReq) returns (Empty) {}
   rpc StopRelay (StopRelayReq) returns (Empty) {}
   
-  rpc AddRoute (AddRouteReq) returns (AddRouteResp) {}
+  rpc AddRoute (AddRouteReq) returns (Empty) {}
   rpc EditRoute (EditRouteReq) returns (Empty) {}
   rpc MoveRoute (MoveRouteReq) returns (Empty) {}
   rpc DelRoute (DelRouteReq) returns (Empty) {}
@@ -158,7 +158,6 @@ message KillSessionReq {
 message AddRouteReq {
   string SessionID = 1;
   Route Route = 2;
-  bool Force = 3;
 }
 
 message EditRouteReq {
@@ -172,10 +171,6 @@ message MoveRouteReq {
   string OldSessionID = 1;
   string RouteID = 2;
   string NewSessionID = 3;
-}
-
-message AddRouteResp {
-  Session OverlappingSession = 1;
 }
 
 message DelRouteReq {
