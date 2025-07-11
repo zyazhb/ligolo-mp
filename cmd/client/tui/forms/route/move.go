@@ -17,7 +17,7 @@ type MoveRouteForm struct {
 
 var (
 	move_target_session_id = forms.FormVal[forms.FormSelectVal]{
-		Hint: "???\n???",
+		Hint: "Move route from one session to another",
 	}
 )
 
