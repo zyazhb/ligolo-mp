@@ -265,7 +265,6 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 			result = append(result, route.Trace{
 				IsInternal: true,
 				Session:    routingSession.GetName(),
-				Route:      linkroute.Dst.String(),
 				Iface:      iface,
 				Metric:     uint(linkroute.Priority),
 			})
@@ -278,7 +277,6 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 			result = append(result, route.Trace{
 				IsInternal: false,
 				Iface:      iface,
-				Route:      linkroute.Dst.String(),
 				Via:        via,
 				Metric:     uint(linkroute.Priority),
 			})

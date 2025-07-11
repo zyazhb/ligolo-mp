@@ -348,9 +348,9 @@ func (app *App) initDashboard() {
 		var route string
 		for _, traceline := range r.Trace {
 			if traceline.IsInternal {
-				route = fmt.Sprintf("%s routed through session '%s' via route %s", address, traceline.Session, traceline.Route)
+				route = fmt.Sprintf("%s routed via session '%s'", address, traceline.Session)
 			} else {
-				route = fmt.Sprintf("%s routed externally through %s via route %s", address, traceline.Iface, traceline.Route)
+				route = fmt.Sprintf("%s routed externally via %s", address, traceline.Iface)
 
 				if traceline.Via != "" {
 					route += fmt.Sprintf(" (%s)", traceline.Via)

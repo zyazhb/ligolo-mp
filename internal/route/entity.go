@@ -57,7 +57,6 @@ func ProtoToRoute(p *pb.Route) *Route {
 type Trace struct {
 	IsInternal bool
 	Session    string
-	Route      string
 	Iface      string
 	Via        string
 	Metric     uint
@@ -67,7 +66,6 @@ func (t *Trace) Proto() *pb.Traceroute {
 	return &pb.Traceroute{
 		IsInternal: t.IsInternal,
 		Session:    t.Session,
-		Route:      t.Route,
 		Iface:      t.Iface,
 		Via:        t.Via,
 		Metric:     int32(t.Metric),
