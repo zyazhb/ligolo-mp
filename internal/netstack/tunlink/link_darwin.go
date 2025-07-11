@@ -15,7 +15,7 @@ func Remove(ID int) error {
 	return fmt.Errorf("not implemented for this architecture")
 }
 
-func AddRoute(ID int, CIDR *net.IPNet) error {
+func AddRoute(ID int, CIDR *net.IPNet, metric int) error {
 	return fmt.Errorf("not implemented for this architecture")
 }
 
