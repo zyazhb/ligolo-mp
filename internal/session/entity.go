@@ -78,10 +78,6 @@ func (sess *Session) GetFirstSeen() time.Time {
 }
 
 func (sess *Session) GetLastSeen() time.Time {
-	if sess.IsConnected {
-		return time.Now()
-	}
-
 	return sess.LastSeen
 }
 
@@ -189,7 +185,11 @@ func (sess *Session) Connect(multiplex *yamux.Session) error {
 	sess.IsConnected = true
 
 	if sess.FirstSeen.IsZero() {
-		sess.FirstSeen = time.Now().UTC()
+		sess.FirstSeen = time.Now()
+	}
+
+	if sess.LastSeen.IsZero() {
+		sess.LastSeen = time.Now()
 	}
 
 	return nil
@@ -197,13 +197,7 @@ func (sess *Session) Connect(multiplex *yamux.Session) error {
 
 func (sess *Session) Disconnect() error {
 	sess.IsConnected = false
-
-	err := sess.remoteDestroySession()
-	if err == nil {
-		sess.LastSeen = time.Now()
-	}
-
-	return err
+	return sess.remoteDestroySession()
 }
 
 func (sess *Session) StartRelay(maxConnections int, maxInFlight int) error {

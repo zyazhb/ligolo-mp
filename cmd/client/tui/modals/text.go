@@ -28,7 +28,7 @@ func NewTextModal(title string, body string) *TextModal {
 	page.AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
 			AddItem(nil, 0, 1, false).
-			AddItem(page.form, 12, 1, true).
+			AddItem(page.form, 11, 1, true).
 			AddItem(nil, 0, 1, false),
 			0, 1, true).
 		AddItem(nil, 0, 1, false)

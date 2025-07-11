@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/config"
@@ -193,6 +194,19 @@ func (ss *SessionService) RemoveRedirector(sessID string, redirectorID string) e
 	return ss.repo.Save(session)
 }
 
+func (ss *SessionService) UpdateLastSeen(sessID string) error {
+	slog.Debug("updating last seen")
+	session := ss.repo.GetOne(sessID)
+	if session == nil {
+		return fmt.Errorf("session '%s' not found", sessID)
+	}
+	slog.Debug("got session from storage", slog.Any("session", session))
+
+	session.LastSeen = time.Now()
+
+	return ss.repo.Save(session)
+}
+
 func (ss *SessionService) GetAll() ([]*Session, error) {
 	return ss.repo.GetAll()
 }
@@ -251,6 +265,7 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 			result = append(result, route.Trace{
 				IsInternal: true,
 				Session:    routingSession.GetName(),
+				Route:      linkroute.Dst.String(),
 				Iface:      iface,
 				Metric:     uint(linkroute.Priority),
 			})
@@ -263,6 +278,7 @@ func (ss *SessionService) Traceroute(address string) ([]route.Trace, error) {
 			result = append(result, route.Trace{
 				IsInternal: false,
 				Iface:      iface,
+				Route:      linkroute.Dst.String(),
 				Via:        via,
 				Metric:     uint(linkroute.Priority),
 			})

@@ -12,6 +12,7 @@
 
 - Multiplayer
 - Automatic TUN management
+- Auto-restoring routing
 - Unlimited concurrent relays
 - SOCKS and HTTP proxy support
 - Routing to the loopback of target machine (no more port forwarding)

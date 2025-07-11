@@ -115,9 +115,10 @@ message Config {
 message Traceroute {
   bool IsInternal = 1;
   string Session = 2;
-  string Iface = 3;
-  string Via = 4;
-  int32 Metric = 5;
+  string Route = 3;
+  string Iface = 4;
+  string Via = 5;
+  int32 Metric = 6;
 }
 
 // [/Objects]

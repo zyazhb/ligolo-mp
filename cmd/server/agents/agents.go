@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/hashicorp/yamux"
 	"github.com/ttpreport/ligolo-mp/v2/internal/certificate"
@@ -152,11 +153,19 @@ func (aah *AgentApiHandler) startHandler() {
 }
 
 func (aah *AgentApiHandler) startSessionMonitor(sess *session.Session) {
-	<-sess.Multiplex.CloseChan()
+	tick := time.NewTicker(1 * time.Second)
+	for {
+		select {
+		case <-tick.C:
+			aah.sessionService.UpdateLastSeen(sess.ID)
+		case <-sess.Multiplex.CloseChan():
+			slog.Debug("session multiplexer closed", slog.Any("session", sess))
+			aah.sessionService.DisconnectSession(sess.ID)
+			events.Publish(events.ERROR, "session with '%s' disconnected", sess.GetName())
+			return
+		}
+	}
 
-	slog.Debug("session multiplexer closed", slog.Any("session", sess))
-	aah.sessionService.DisconnectSession(sess.ID)
-	events.Publish(events.ERROR, "session with '%s' disconnected", sess.GetName())
 }
 
 func (aah *AgentApiHandler) Close() {
