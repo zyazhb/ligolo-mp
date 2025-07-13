@@ -1,18 +1,14 @@
 package artifacts
 
 import (
-	"embed"
-)
-
-var (
-	//go:embed agent.zip go.zip
-	fs embed.FS
+	"path/filepath"
+	"runtime"
 )
 
 func GetGoArchive() ([]byte, error) {
-	return fs.ReadFile("go.zip")
+	return artifactsFs.ReadFile(filepath.Join("go", runtime.GOOS, runtime.GOARCH, "go.zip"))
 }
 
 func GetAgentArchive() ([]byte, error) {
-	return fs.ReadFile("agent.zip")
+	return artifactsFs.ReadFile("agent.zip")
 }

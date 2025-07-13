@@ -4,25 +4,53 @@ project_name: ligolo-mp
 before:
   hooks:
   - make clean
-  - make assets
+  - make agent
 
 builds:
   - main: ./cmd/server
-    id: "server"
+    id: "server-386"
     binary: server
     env: [CGO_ENABLED=0]
     flags:
       - -trimpath
       - -mod=vendor
+    hooks:
+      pre:
+        - sh -c "TARGET_ARCH=386 make go"
     goos:
       - linux
     goarch:
       - 386
+
+  - main: ./cmd/server
+    id: "server-amd64"
+    binary: server
+    env: [CGO_ENABLED=0]
+    flags:
+      - -trimpath
+      - -mod=vendor
+    hooks:
+      pre:
+        - sh -c "TARGET_ARCH=amd64 make go"
+    goos:
+      - linux
+    goarch:
       - amd64
+
+  - main: ./cmd/server
+    id: "server-arm64"
+    binary: server
+    env: [CGO_ENABLED=0]
+    flags:
+      - -trimpath
+      - -mod=vendor
+    hooks:
+      pre:
+        - sh -c "TARGET_ARCH=arm64 make go"
+    goos:
+      - linux
+    goarch:
       - arm64
-    goarm:
-      - 6
-      - 7
 
   - main: ./cmd/client
     id: "client"
@@ -40,20 +68,17 @@ builds:
       - 386
       - amd64
       - arm64
-    goarm:
-      - 6
-      - 7
 
 archives:
   - 
     id: "server"
-    builds: ['server']
+    ids: ['server-386', 'server-amd64', 'server-arm64']
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     formats: ['binary']
 
   - 
     id: "client"
-    builds: ['client']
+    ids: ['client']
     name_template: "{{ .ProjectName }}_{{ .Binary }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}"
     formats: ['binary']
 

@@ -39,18 +39,18 @@ binaries: server client
 .PHONY: go
 go:
 	# Build go
-	cd artifacts && curl -L --output go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz https://dl.google.com/go/go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
-	cd artifacts && tar xvf go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
-	cd artifacts/go && rm -rf $(BLOAT_FILES)
-	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/doc
-	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/tour
-	rm -f artifacts/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/test2json
+	cd artifacts && curl -L --output go/$(TARGET_OS)/$(TARGET_ARCH)/go.tar.gz https://dl.google.com/go/go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
+	cd artifacts/go/$(TARGET_OS)/$(TARGET_ARCH) && tar xvf go.tar.gz
+	cd artifacts/go/$(TARGET_OS)/$(TARGET_ARCH) && rm -rf $(BLOAT_FILES)
+	rm -f artifacts/go/$(TARGET_OS)/$(TARGET_ARCH)/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/doc
+	rm -f artifacts/go/$(TARGET_OS)/$(TARGET_ARCH)/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/tour
+	rm -f artifacts/go/$(TARGET_OS)/$(TARGET_ARCH)/go/pkg/tool/$(TARGET_OS)_$(TARGET_ARCH)/test2json
 	# Build garble
-	cd artifacts/go/bin && curl -L --output garble https://github.com/ttpreport/garble/releases/download/v$(GARBLE_VER)/garble_$(TARGET_OS)_$(TARGET_ARCH) && chmod +x garble
+	cd artifacts/go/$(TARGET_OS)/$(TARGET_ARCH)/go/bin && curl -L --output garble https://github.com/ttpreport/garble/releases/download/v$(GARBLE_VER)/garble_$(TARGET_OS)_$(TARGET_ARCH) && chmod +x garble
 	# Bundle
-	cd artifacts && zip -r go.zip ./go
+	cd artifacts/go/$(TARGET_OS)/$(TARGET_ARCH) && zip -r go.zip ./go
 	# Clean up
-	cd artifacts && rm -rf go go$(GO_VER).$(TARGET_OS)-$(TARGET_ARCH).tar.gz
+	cd artifacts/go/$(TARGET_OS)/$(TARGET_ARCH) && rm -rf go go.tar.gz
 
 .PHONY: agent
 agent:
@@ -72,7 +72,7 @@ protobuf:
 
 .PHONY: clean
 clean:
-	rm -rf artifacts/agent.zip artifacts/go.zip
+	rm -rf artifacts/agent.zip artifacts/go/*/*/*
 
 .PHONY: install
 install:
